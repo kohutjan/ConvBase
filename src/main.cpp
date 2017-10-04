@@ -1,11 +1,11 @@
-#include <iostream>
+#include "net.hpp"
 
 using namespace std;
 
-int main(void) {
-
-     cout << "Hello World" << endl;
-
-     return(0);
-
+int main(int argc, char **argv)
+{
+  string modelName(argv[1]);
+  Net net;
+  net.Load(modelName);
+  return 0;
 }
