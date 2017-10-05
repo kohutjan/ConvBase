@@ -27,6 +27,18 @@ vector<Tensor4D> Convolution::Forward(vector<Tensor4D> input)
                                       this->outputW, this->outputC));
   memcpy(output[0].GetData(), eigenOutput.data(),
          this->outputN * this->outputH * this->outputW * this->outputC * sizeof(float));
+  if (this->bias)
+  {
+    float * outputPixel = output[0].GetData();
+    float * biasesVal = this->biases.GetData();
+    for (int i = 0; i < this->outputN * this->outputH * this->outputW; ++i)
+    {
+      for (int c = 0; c < this->outputC; ++c)
+      {
+        outputPixel[i * this->outputC + c] += biasesVal[c];
+      }
+    }
+  }
 
   return output;
 }

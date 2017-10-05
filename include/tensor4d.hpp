@@ -7,16 +7,13 @@
 class Tensor4D
 {
   public:
-    /*
     Tensor4D()
     {
-      n = 0;
-      h = 0;
-      w = 0;
-      c = 0;
-      data = NULL;
+      N = 0;
+      H = 0;
+      W = 0;
+      C = 0;
     }
-    */
     Tensor4D(std::string _name, int _N, int _H, int _W, int _C) : name(_name),
              N(_N), H( _H), W( _W), C(_C)
     {

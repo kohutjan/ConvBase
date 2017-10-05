@@ -53,14 +53,40 @@ unique_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
   {
     bias = false;
   }
-  Tensor4D kernels(5, 5, 5, 5);
+  Tensor4D kernels;
+  Tensor4D biases;
+  int numberOfWeights;
+  modelStream >> numberOfWeights;
+  if (numberOfWeights > 0)
+  {
+    int kernelsC;
+    modelStream >> kernelsC;
+    kernels = Tensor4D(parameters[0], parameters[1], parameters[1], kernelsC);
+    float * kernelsVal = kernels.GetData();
+    for (int i = 0; i < numberOfWeights; ++i)
+    {
+      modelStream >> kernelsVal[i];
+    }
+  }
+  int numberOfBiases;
+  modelStream >> numberOfBiases;
+  if (numberOfBiases > 0)
+  {
+    biases = Tensor4D(1, 1, 1, numberOfBiases);
+    float * biasesVal = biases.GetData();
+    for (int i = 0; i < numberOfBiases; ++i)
+    {
+      modelStream >> biasesVal[i];
+    }
+  }
+
   cout << "type: Convolution | ";
   this->PrintIO(IO);
   cout << " | params: " << parameters[0] << "," << parameters[1] << ","
        << parameters[2] << "," << parameters[3] << "," << bias << endl;
   return unique_ptr<Operator>(new Convolution(IO, parameters[0], parameters[1],
                                               parameters[2], parameters[3],
-                                              bias, kernels));
+                                              bias, kernels, biases));
 }
 
 unique_ptr<Operator> Net::LoadPooling(ifstream &modelStream)
@@ -155,4 +181,24 @@ bool Net::LoadFromStream(ifstream &modelStream)
   cout << "#############################################################" << endl;
   cout << endl;
   return true;
+}
+
+void Net::Init(vector<Tensor4D> input)
+{
+  //TODO generalize
+  for (auto& op: this->operators)
+  {
+    op->ComputeOutputShape(input[0].GetN(), input[0].GetH(), input[0].GetW(),
+                           input[0].GetC());
+  }
+}
+
+vector<Tensor4D> Net::Forward(vector<Tensor4D> input)
+{
+   vector<Tensor4D> output = input;
+   for (auto& op: this->operators)
+   {
+     output = op->Forward(output);
+   }
+   return output;
 }

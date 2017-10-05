@@ -12,8 +12,8 @@ class Net
 {
   public:
     bool Load(std::string modelName);
-    void InitNet(Tensor4D input);
-    Tensor4D Forward(Tensor4D input);
+    void Init(std::vector<Tensor4D> input);
+    std::vector<Tensor4D> Forward(std::vector<Tensor4D> input);
     bool LoadFromStream(std::ifstream &modelStream);
     std::unique_ptr<Operator> LoadConvolution(std::ifstream &modelStream);
     std::unique_ptr<Operator> LoadPooling(std::ifstream &modelStream);

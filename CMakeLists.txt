@@ -17,3 +17,13 @@ add_executable(ConvBase
                ${ConvBase_SRC_DIR}/operators/relu.cpp
                ${ConvBase_SRC_DIR}/operators/reshape.cpp
                ${ConvBase_SRC_DIR}/operators/im2col.cpp)
+
+
+add_executable(compute_convolution
+               ${ConvBase_SRC_DIR}/tests/compare/convolution/compute_convolution.cpp
+               ${ConvBase_SRC_DIR}/net.cpp
+               ${ConvBase_SRC_DIR}/operators/convolution.cpp
+               ${ConvBase_SRC_DIR}/operators/pooling.cpp
+               ${ConvBase_SRC_DIR}/operators/relu.cpp
+               ${ConvBase_SRC_DIR}/operators/reshape.cpp
+               ${ConvBase_SRC_DIR}/operators/im2col.cpp)
