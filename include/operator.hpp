@@ -10,6 +10,7 @@ class Operator
     std::vector<std::string> GetBottoms() { return bottoms; }
     std::vector<std::string> GetTops() { return tops; }
     virtual std::vector<Tensor4D> Forward(std::vector<Tensor4D> inputs) = 0;
+    virtual std::vector<Tensor4D> Backward(std::vector<Tensor4D> inputs) = 0;
     virtual ~Operator(){};
 
   protected:

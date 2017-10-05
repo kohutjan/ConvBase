@@ -2,6 +2,7 @@
 #define CONVOLUTION_HPP
 
 #include "operator.hpp"
+#include "operators/im2col.hpp"
 
 class Convolution : public Operator
 {
@@ -11,6 +12,7 @@ class Convolution : public Operator
          numberOfKernels(_numberOfKernels), kernelSize(_kernelSize),
          stride(_stride), pad(_pad), bias(_bias){}
     std::vector<Tensor4D> Forward(std::vector<Tensor4D> input);
+    std::vector<Tensor4D> Backward(std::vector<Tensor4D> input);
     int GetNumberOfKernels() const { return numberOfKernels; }
     int GetKernelSize() const { return kernelSize; }
     int GetStride() const { return stride; }

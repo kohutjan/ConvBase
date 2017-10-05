@@ -7,6 +7,7 @@
 class Tensor4D
 {
   public:
+    /*
     Tensor4D()
     {
       n = 0;
@@ -15,21 +16,36 @@ class Tensor4D
       c = 0;
       data = NULL;
     }
-    Tensor4D(std::string _name, int _n, int _h, int _w, int _c)
-             : name(_name), n(_n), h( _h), w( _w), c(_c), data(NULL){}
+    */
+    Tensor4D(std::string _name, int _N, int _H, int _W, int _C) : name(_name),
+             N(_N), H( _H), W( _W), C(_C)
+    {
+      data = std::make_shared<float>(N * H * W * C);
+    }
+    Tensor4D(int _N, int _H, int _W, int _C) : N(_N), H( _H), W( _W), C(_C)
+    {
+      data = std::make_shared<float>(N * H * W * C);
+    }
     std::string GetName() { return name; }
-    int GetH() const { return h; }
-    int GetW() const { return w; }
-    int GetN() const { return n; }
-    int GetC() const { return c; }
-    std::shared_ptr<float> GetData() const { return data; }
+    int GetN() const { return N; }
+    int GetH() const { return H; }
+    int GetW() const { return W; }
+    int GetC() const { return C; }
+    float * GetPixel(int n, int h, int w)
+    {
+      return data.get() + n * H * W * C + h * W * C + w * C;
+    }
+    float * GetData()
+    {
+      return data.get();
+    }
 
   private:
     std::string name;
-    int n;
-    int h;
-    int w;
-    int c;
+    int N;
+    int H;
+    int W;
+    int C;
     std::shared_ptr<float> data;
 };
 
