@@ -9,13 +9,8 @@ vector<Tensor4D> Im2Col::Forward(vector<Tensor4D> input)
   int inputW = input[0].GetW() + 2 * this->pad;
   int inputC = input[0].GetC();
 
-  int outputN = 1;
-  int outputH = ((inputH - this->kernelSize) / this->stride + 1) *
-                ((inputW - this->kernelSize) / this->stride + 1) *
-                inputN;
-  int outputW = this->kernelSize * this->kernelSize * inputC;
-  int outputC = 1;
-  vector<Tensor4D> output(1, Tensor4D(outputN, outputH, outputW, outputC));
+  vector<Tensor4D> output(1, Tensor4D(this->outputN, this->outputH, this->outputW,
+                                      this->outputC));
   float * outputData = output[0].GetData();
   int outputOffset = 0;
 
@@ -64,4 +59,14 @@ vector<Tensor4D> Im2Col::Backward(vector<Tensor4D> input)
 {
   vector<Tensor4D> output;
   return output;
+}
+
+void Im2Col::ComputeOutputShape(int inputN, int inputH, int inputW, int inputC)
+{
+  this->outputN = 1;
+  this->outputH = ((inputH - this->kernelSize) / this->stride + 1) *
+                  ((inputW - this->kernelSize) / this->stride + 1) *
+                  inputN;
+  this->outputW = this->kernelSize * this->kernelSize * inputC;
+  this->outputC = 1;
 }

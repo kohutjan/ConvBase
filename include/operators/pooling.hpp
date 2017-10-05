@@ -11,6 +11,7 @@ class Pooling : public Operator
             stride(_stride), pad(_pad){}
     std::vector<Tensor4D> Forward(std::vector<Tensor4D> input);
     std::vector<Tensor4D> Backward(std::vector<Tensor4D> input);
+    void ComputeOutputShape(int inputN, int inputH, int inputW, int inputC);
     int GetKernelSize() const { return kernelSize; }
     int GetStride() const { return stride; }
     int GetPad() const { return pad; }

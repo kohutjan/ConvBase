@@ -13,3 +13,8 @@ vector<Tensor4D> Reshape::Backward(vector<Tensor4D> input)
   vector<Tensor4D> output;
   return output;
 }
+
+void Reshape::ComputeOutputShape(int inputN, int inputH, int inputW, int inputC)
+{
+
+}

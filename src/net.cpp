@@ -53,13 +53,14 @@ unique_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
   {
     bias = false;
   }
+  Tensor4D kernels(5, 5, 5, 5);
   cout << "type: Convolution | ";
   this->PrintIO(IO);
   cout << " | params: " << parameters[0] << "," << parameters[1] << ","
        << parameters[2] << "," << parameters[3] << "," << bias << endl;
   return unique_ptr<Operator>(new Convolution(IO, parameters[0], parameters[1],
                                               parameters[2], parameters[3],
-                                              bias));
+                                              bias, kernels));
 }
 
 unique_ptr<Operator> Net::LoadPooling(ifstream &modelStream)

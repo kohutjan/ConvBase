@@ -10,6 +10,7 @@ class Reshape : public Operator
             : Operator(IO), h(_h), w(_w), c(_c){}
     std::vector<Tensor4D> Forward(std::vector<Tensor4D> input);
     std::vector<Tensor4D> Backward(std::vector<Tensor4D> input);
+    void ComputeOutputShape(int inputN, int inputH, int inputW, int inputC);
     int GetH() const { return h; }
     int GetW() const { return w; }
     int GetC() const { return c; }
