@@ -55,15 +55,14 @@ unique_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
   }
   Tensor4D kernels;
   Tensor4D biases;
-  int numberOfWeights;
-  modelStream >> numberOfWeights;
-  if (numberOfWeights > 0)
+  int kernelsC;
+  modelStream >> kernelsC;
+  if (kernelsC > 0)
   {
-    int kernelsC;
-    modelStream >> kernelsC;
     kernels = Tensor4D(parameters[0], parameters[1], parameters[1], kernelsC);
     float * kernelsVal = kernels.GetData();
-    for (int i = 0; i < numberOfWeights; ++i)
+    for (int i = 0; i < parameters[0] * parameters[1] * parameters[1] *
+         kernelsC; ++i)
     {
       modelStream >> kernelsVal[i];
     }
@@ -154,8 +153,10 @@ bool Net::LoadFromStream(ifstream &modelStream)
   cout << "#############################################################" << endl;
   string operatorName;
 
-  while (getline(modelStream, operatorName))
+  while (!modelStream.eof())
   {
+    modelStream >> operatorName;
+
     if (operatorName == "Convolution")
     {
       this->operators.push_back(this->LoadConvolution(modelStream));
@@ -186,19 +187,14 @@ bool Net::LoadFromStream(ifstream &modelStream)
 void Net::Init(vector<Tensor4D> input)
 {
   //TODO generalize
-  for (auto& op: this->operators)
-  {
-    op->ComputeOutputShape(input[0].GetN(), input[0].GetH(), input[0].GetW(),
-                           input[0].GetC());
-  }
+  this->operators[0]->SetBottomShape(vector<vector<int> >(1, input[0].GetShape()));
+  this->operators[0]->ComputeTopShape();
 }
 
 vector<Tensor4D> Net::Forward(vector<Tensor4D> input)
 {
-   vector<Tensor4D> output = input;
-   for (auto& op: this->operators)
-   {
-     output = op->Forward(output);
-   }
-   return output;
+   //TODO generalize
+   vector<Tensor4D> top(1, Tensor4D(this->operators[0]->GetTopShape()[0]));
+   this->operators[0]->Forward(input, top);
+   return top;
 }

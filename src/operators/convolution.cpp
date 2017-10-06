@@ -1,58 +1,65 @@
 #include "operators/convolution.hpp"
+#include <iostream>
 
 using namespace std;
 using namespace Eigen;
 
-vector<Tensor4D> Convolution::Forward(vector<Tensor4D> input)
+void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  Im2Col im2col(this->kernelSize, this->stride, this->pad);
-  Tensor4D col = im2col.Forward(input)[0];
-
+  vector<Tensor4D> col(1, Tensor4D(im2col.GetTopShape()[0]));
+  this->im2col.Forward(bottom, col);
   Map<Matrix<float,
              Dynamic,
              Dynamic,
              RowMajor> >
-             eigenCol(col.GetData(), col.GetH(), col.GetW());
+             eigenCol(col[0].GetData(), col[0].GetShape()[Hd], col[0].GetShape()[Wd]);
   Map<Matrix<float,
              Dynamic,
              Dynamic,
              ColMajor> >
              eigenKernels(this->kernels.GetData(), this->kernelSize *
-                          this->kernelSize * this->kernels.GetC(),
+                          this->kernelSize * this->kernels.GetShape()[Cd],
                           this->numberOfKernels);
 
-  MatrixXf eigenOutput = eigenCol * eigenKernels;
+  Matrix<float, Dynamic, Dynamic, RowMajor> eigenOutput = eigenCol * eigenKernels;
 
-  vector<Tensor4D> output(1, Tensor4D(this->outputN, this->outputH,
-                                      this->outputW, this->outputC));
-  memcpy(output[0].GetData(), eigenOutput.data(),
-         this->outputN * this->outputH * this->outputW * this->outputC * sizeof(float));
+  /*
+  cout << eigenCol << endl;
+  cout << endl;
+  cout << eigenKernels << endl;
+  cout << endl;
+  cout << eigenOutput << endl;
+  */
+
+  memcpy(top[0].GetData(), eigenOutput.data(),
+         this->topShape[0][Nd] * this->topShape[0][Hd] * this->topShape[0][Wd] *
+         this->topShape[0][Cd] * sizeof(float));
   if (this->bias)
   {
-    float * outputPixel = output[0].GetData();
+    float * outputPixel = top[0].GetData();
     float * biasesVal = this->biases.GetData();
-    for (int i = 0; i < this->outputN * this->outputH * this->outputW; ++i)
+    for (int i = 0; i < this->topShape[0][Nd] * this->topShape[0][Hd] *
+         this->topShape[0][Wd]; ++i)
     {
-      for (int c = 0; c < this->outputC; ++c)
+      for (int c = 0; c < this->topShape[0][Cd]; ++c)
       {
-        outputPixel[i * this->outputC + c] += biasesVal[c];
+        outputPixel[i * this->topShape[0][Cd] + c] += biasesVal[c];
       }
     }
   }
-
-  return output;
 }
 
-vector<Tensor4D> Convolution::Backward(vector<Tensor4D> input)
+void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  vector<Tensor4D> output;
-  return output;
+
 }
 
-void Convolution::ComputeOutputShape(int inputN, int inputH, int inputW, int inputC)
+void Convolution::ComputeTopShape()
 {
-  this->outputN = inputN;
-  this->outputH = (inputH + 2 * this->pad - this->kernelSize) / this->stride + 1;
-  this->outputW = (inputW + 2 * this->pad - this->kernelSize) / this->stride + 1;
-  this->outputC = this->numberOfKernels;
+  this->topShape[0][Nd] = this->bottomShape[0][Nd];
+  this->topShape[0][Hd] = (this->bottomShape[0][Hd] + 2 * this->pad - this->kernelSize) / this->stride + 1;
+  this->topShape[0][Wd] = (this->bottomShape[0][Wd] + 2 * this->pad - this->kernelSize) / this->stride + 1;
+  this->topShape[0][Cd] = this->numberOfKernels;
+  im2col.SetBottomShape(this->bottomShape);
+  im2col.ComputeTopShape();
 }

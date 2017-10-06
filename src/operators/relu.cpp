@@ -2,22 +2,17 @@
 
 using namespace std;
 
-vector<Tensor4D> ReLU::Forward(vector<Tensor4D> input)
+void ReLU::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  vector<Tensor4D> output;
-  return output;
+
 }
 
-vector<Tensor4D> ReLU::Backward(vector<Tensor4D> input)
+void ReLU::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  vector<Tensor4D> output;
-  return output;
+
 }
 
-void ReLU::ComputeOutputShape(int inputN, int inputH, int inputW, int inputC)
+void ReLU::ComputeTopShape()
 {
-  this->outputN = inputN;
-  this->outputH = inputH;
-  this->outputW = inputW;
-  this->outputC = inputC;
+
 }

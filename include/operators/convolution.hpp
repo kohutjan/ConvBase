@@ -13,10 +13,10 @@ class Convolution : public Operator
                 Tensor4D _kernels, Tensor4D _biases) : Operator(IO),
                 numberOfKernels(_numberOfKernels), kernelSize(_kernelSize),
                 stride(_stride), pad(_pad), bias(_bias), kernels(_kernels),
-                biases(_biases){}
-    std::vector<Tensor4D> Forward(std::vector<Tensor4D> input);
-    std::vector<Tensor4D> Backward(std::vector<Tensor4D> input);
-    void ComputeOutputShape(int inputN, int inputH, int inputW, int inputC);
+                biases(_biases), im2col(_kernelSize, _stride, _pad){}
+    void Forward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
+    void Backward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
+    void ComputeTopShape();
     int GetNumberOfKernels() const { return numberOfKernels; }
     int GetKernelSize() const { return kernelSize; }
     int GetStride() const { return stride; }
@@ -32,6 +32,7 @@ class Convolution : public Operator
     const bool bias;
     Tensor4D kernels;
     Tensor4D biases;
+    Im2Col im2col;
 };
 
 #endif

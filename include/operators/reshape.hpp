@@ -8,9 +8,9 @@ class Reshape : public Operator
   public:
     Reshape(std::vector<std::vector<std::string>> IO, int _h, int _w, int _c)
             : Operator(IO), h(_h), w(_w), c(_c){}
-    std::vector<Tensor4D> Forward(std::vector<Tensor4D> input);
-    std::vector<Tensor4D> Backward(std::vector<Tensor4D> input);
-    void ComputeOutputShape(int inputN, int inputH, int inputW, int inputC);
+    void Forward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
+    void Backward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
+    void ComputeTopShape();
     int GetH() const { return h; }
     int GetW() const { return w; }
     int GetC() const { return c; }

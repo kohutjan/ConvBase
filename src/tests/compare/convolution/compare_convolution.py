@@ -4,6 +4,7 @@ import argparse
 import os
 import math
 import random
+import subprocess
 from google.protobuf.text_format import Merge
 import tempfile
 
@@ -45,7 +46,6 @@ def main():
 
     import caffe
     from caffe.proto import caffe_pb2
-    from compare_net import compareNet
 
     if args.cpu:
         caffe.set_mode_cpu()
@@ -89,6 +89,7 @@ def main():
             net.params['convolution'][1].data[...] = np.random.random_sample(net.params['convolution'][1].data.shape) * 0.25 - 0.125
 
         errorSum += compareConvolution(net, deploy, args.convbase_executable,
+                                       outputTop="convolution",
                                        outputPreffix="convolution_",
                                        verbose=args.verbose)
 
@@ -115,10 +116,12 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
         pass
     inputFile = open(outputPreffix + "input.txt", "w")
     nhwcInput = np.swapaxes(np.swapaxes(net.blobs[inputName].data, 1, 2), 2, 3).reshape(-1)
-    inputFile.write("{}\n{}\n{}\n{}\n".format(net.blobs[inputName].data.shape[0],
+    inputFile.write("{} {} {} {}\n".format(net.blobs[inputName].data.shape[0],
                                               net.blobs[inputName].data.shape[2],
                                               net.blobs[inputName].data.shape[3],
-    inputFile.write("{}\n".format(value))
+                                              net.blobs[inputName].data.shape[1]))
+    for value in nhwcInput:
+        inputFile.write("{}\n".format(value))
     inputFile.close()
 
     try:
@@ -126,28 +129,31 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
     except OSError:
         pass
     paramsFile = open(outputPreffix + "params.txt", "w")
+    paramsFile.write("Convolution\n")
     paramsFile.write("1 botoom 1 top\n")
     try:
-        biases = net.params[layerParam.name][1].data
+        biases = net.params[deploy.layer[1].name][1].data
         biasTerm = 1
     except:
         biases = None
         biasTerm = 0
-    parmas = deploy.layer[1]
+    params = deploy.layer[1]
     paramsFile.write("{} {} {} {} {}\n".format(params.convolution_param.num_output,
                                                params.convolution_param.kernel_size[0],
                                                params.convolution_param.stride[0],
                                                params.convolution_param.pad[0],
                                                biasTerm))
     nhwcWeights = np.swapaxes(np.swapaxes(net.params[deploy.layer[1].name][0].data, 1, 2), 2, 3).reshape(-1)
-    paramsFile.write("{}".format(nhwcWeights.size))
+    paramsFile.write("{}".format(net.params[deploy.layer[1].name][0].data.shape[1]))
     for weight in nhwcWeights:
         paramsFile.write(" {}".format(weight))
     paramsFile.write("\n")
     if biases is not None:
-        parmasFile.write("{}".format(biases.size))
+        paramsFile.write("{}".format(biases.size))
         for bias in biases:
             paramsFile.write(" {}".format(bias))
+    else:
+        paramsFile.write("0")
 
     paramsFile.close()
 
@@ -156,7 +162,7 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
 
     net.forward()
     convbaseArgs = [convbaseExecutable, outputPreffix + "input.txt",
-                   convbasemodelName, outputPreffix + "convbase_output.txt"]
+                    outputPreffix + "params.txt", outputPreffix + "convbase_output.txt"]
     convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
     convbaseForward.wait()
 
@@ -196,7 +202,7 @@ def compareOutputs(caffeOutputFile, convbaseOutputFile):
     convbaseOutput = []
     with open(caffeOutputFile) as f:
         caffeOutput = f.read().splitlines()
-    with open(XNOROutputFile) as f:
+    with open(convbaseOutputFile) as f:
         convbaseOutput = f.read().splitlines()
 
     try:
@@ -207,17 +213,17 @@ def compareOutputs(caffeOutputFile, convbaseOutputFile):
     if caffeOutput[np.where(abs(caffeOutput) > 10e+10)].size > 0 or caffeOutput.size == 0:
         return 0.0, 'CC'
     try:
-        convbaseOutput = np.array(map(float, XNOROutput))
+        convbaseOutput = np.array(map(float, convbaseOutput))
     except:
         convbaseOutput = []
         pass
-    if XNOROutput[np.where(abs(XNOROutput) > 10e+10)].size > 0 or XNOROutput.size == 0:
+    if convbaseOutput[np.where(abs(convbaseOutput) > 10e+10)].size > 0 or convbaseOutput.size == 0:
         return 0.0, 'CX'
 
-    if caffeOutput.size != XNOROutput.size:
+    if caffeOutput.size != convbaseOutput.size:
         return 0.0, 'DO'
 
-    return np.abs(caffeOutput - XNOROutput).mean()/np.abs(caffeOutput).mean(), 'OK'
+    return np.abs(caffeOutput - convbaseOutput).mean()/np.abs(caffeOutput).mean(), 'OK'
 
 
 def createConvolutionNet(params, bias):
@@ -235,15 +241,28 @@ def createConvolutionNet(params, bias):
         stride = int(convParams[2])
         pad = int(convParams[3])
     else:
-        kernelNumber = random.randint(1, 128)
-        kernelSize = random.randint(1, 10)
+        kernelNumber = random.randint(1, 32)
+        kernelSize = random.randint(1, 3)
         stride = random.randint(1, 10)
         pad = random.randint(0, kernelSize - 1)
 
-        num = random.randint(1, 128)
-        channels = random.randint(1, 128)
-        height = random.randint(1, 50)
-        width = random.randint(1, 50)
+        num = random.randint(1, 16)
+        channels = random.randint(1, 32)
+        height = random.randint(1, 32)
+        width = random.randint(1, 32)
+
+        """
+        kernelNumber = 10
+        kernelSize = 2
+        stride = 1
+        pad = 1
+
+        num = 1
+        channels = 1
+        height = 2
+        width = 2
+        """
+
         # Adjust input to exactly fit conv params
         height = adjustDimension(height, kernelSize, stride, pad)
         width = adjustDimension(width, kernelSize, stride, pad)

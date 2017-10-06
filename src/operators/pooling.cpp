@@ -2,20 +2,17 @@
 
 using namespace std;
 
-vector<Tensor4D> Pooling::Forward(vector<Tensor4D> input)
+void Pooling::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  vector<Tensor4D> output;
-  return output;
+
 }
 
-vector<Tensor4D> Pooling::Backward(vector<Tensor4D> input)
+void Pooling::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  vector<Tensor4D> output;
-  return output;
+
 }
 
-void Pooling::ComputeOutputShape(int inputN, int inputH, int inputW, int inputC)
+void Pooling::ComputeTopShape()
 {
-  this->outputN = inputN;
-  this->outputC = inputC;  
+
 }

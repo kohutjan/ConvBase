@@ -6,29 +6,26 @@ using namespace std;
 int main(int argc, char **argv)
 {
   string inputFile(argv[1]);
-
   ifstream inputStream(inputFile);
   if (!inputStream.is_open())
   {
     cerr << "Unable to open input file." << endl;
     return 1;
   }
-  vector<int> inputParmas(4);
-  for (auto& param: inputParmas)
+  vector<int> inputParams(4);
+  for (auto& param: inputParams)
   {
     inputStream >> param;
   }
-  vector<Tensor4D> input(1, Tensor4D(inputParmas[0],
-                                     inputParmas[1],
-                                     inputParmas[2],
-                                     inputParmas[3]));
+  vector<Tensor4D> input(1, Tensor4D(inputParams));
   float * inputVal = input[0].GetData();
-  for (int i = 0; i < inputParmas[0] * inputParmas[1] * inputParmas[2] *
-       inputParmas[3]; ++i)
+  for (int i = 0; i < inputParams[0] * inputParams[1] * inputParams[2] *
+       inputParams[3]; ++i)
   {
     inputStream >> inputVal[i];
   }
   inputStream.close();
+
 
   string paramsFile(argv[2]);
   Net net;
@@ -43,8 +40,8 @@ int main(int argc, char **argv)
     return 2;
   }
   float * outputVal = output[0].GetData();
-  for (int i = 0; i < output[0].GetN() * output[0].GetH() * output[0].GetW()
-       * output[0].GetC(); ++i)
+  for (int i = 0; i < output[0].GetShape()[Nd] * output[0].GetShape()[Hd] *
+       output[0].GetShape()[Wd] * output[0].GetShape()[Cd]; ++i)
   {
     outputStream << outputVal[i] << endl;
   }
