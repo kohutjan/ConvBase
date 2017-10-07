@@ -7,13 +7,15 @@
 #include "operators/reshape.hpp"
 #include <iostream>
 #include <fstream>
+#include <map>
 
 class Net
 {
   public:
     bool Load(std::string modelName);
-    void Init(std::vector<Tensor4D> input);
-    std::vector<Tensor4D> Forward(std::vector<Tensor4D> input);
+    void Init();
+    std::vector<Tensor4D> Forward(std::vector<Tensor4D> bottom);
+    std::vector<Tensor4D> Backward(std::vector<Tensor4D> top);
     bool LoadFromStream(std::ifstream &modelStream);
     std::unique_ptr<Operator> LoadConvolution(std::ifstream &modelStream);
     std::unique_ptr<Operator> LoadPooling(std::ifstream &modelStream);
@@ -24,6 +26,8 @@ class Net
   private:
     std::vector<std::vector<std::string>> LoadIO(std::ifstream &modelStream);
     void PrintIO(std::vector<std::vector<std::string>> IO);
+    void LoadInput(std::ifstream &modelStream);
+    std::map<std::string, std::vector<int>> inputs;
 };
 
 #endif

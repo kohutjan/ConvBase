@@ -40,6 +40,25 @@ vector<vector<string>> Net::LoadIO(ifstream& modelStream)
   return IO;
 }
 
+void Net::LoadInput(ifstream& modelStream)
+{
+  int numberOfInputs;
+  modelStream >> numberOfInputs;
+  for (int i = 0; i < numberOfInputs; ++i)
+  {
+    this->inputs = map<string, vector<int>>();
+    string inputName;
+    modelStream >> inputName;
+    vector<int> inputParams(4);
+    for (auto& param: inputParams)
+    {
+      modelStream >> param;
+    }
+    this->inputs[inputName] = inputParams;
+  }
+
+}
+
 unique_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
 {
   vector<vector<string>> IO = this->LoadIO(modelStream);
@@ -156,7 +175,11 @@ bool Net::LoadFromStream(ifstream &modelStream)
   while (!modelStream.eof())
   {
     modelStream >> operatorName;
-
+    if (operatorName == "Input")
+    {
+      this->LoadInput(modelStream);
+      continue;
+    }
     if (operatorName == "Convolution")
     {
       this->operators.push_back(this->LoadConvolution(modelStream));
@@ -184,17 +207,25 @@ bool Net::LoadFromStream(ifstream &modelStream)
   return true;
 }
 
-void Net::Init(vector<Tensor4D> input)
+void Net::Init()
 {
   //TODO generalize
-  this->operators[0]->SetBottomShape(vector<vector<int> >(1, input[0].GetShape()));
+  this->operators[0]->SetBottomShape(vector<vector<int>>(1, this->inputs.begin()->second));
   this->operators[0]->ComputeTopShape();
 }
 
-vector<Tensor4D> Net::Forward(vector<Tensor4D> input)
+vector<Tensor4D> Net::Forward(vector<Tensor4D> bottom)
 {
    //TODO generalize
    vector<Tensor4D> top(1, Tensor4D(this->operators[0]->GetTopShape()[0]));
-   this->operators[0]->Forward(input, top);
+   this->operators[0]->Forward(bottom, top);
    return top;
+}
+
+vector<Tensor4D> Net::Backward(vector<Tensor4D> top)
+{
+  //TODO generalize
+  vector<Tensor4D> bottom(1, Tensor4D(this->operators[0]->GetBottomShape()[0]));
+  this->operators[0]->Backward(bottom, top);
+  return bottom;
 }

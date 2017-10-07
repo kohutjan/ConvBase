@@ -117,9 +117,9 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
     inputFile = open(outputPreffix + "input.txt", "w")
     nhwcInput = np.swapaxes(np.swapaxes(net.blobs[inputName].data, 1, 2), 2, 3).reshape(-1)
     inputFile.write("{} {} {} {}\n".format(net.blobs[inputName].data.shape[0],
-                                              net.blobs[inputName].data.shape[2],
-                                              net.blobs[inputName].data.shape[3],
-                                              net.blobs[inputName].data.shape[1]))
+                                           net.blobs[inputName].data.shape[2],
+                                           net.blobs[inputName].data.shape[3],
+                                           net.blobs[inputName].data.shape[1]))
     for value in nhwcInput:
         inputFile.write("{}\n".format(value))
     inputFile.close()
@@ -129,7 +129,13 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
     except OSError:
         pass
     paramsFile = open(outputPreffix + "params.txt", "w")
-    paramsFile.write("Convolution\n")
+    paramsFile.write("Input\n")
+    paramsFile.write("1\n")
+    paramsFile.write("bottom {} {} {} {}\n".format(net.blobs[inputName].data.shape[0],
+                                                  net.blobs[inputName].data.shape[2],
+                                                  net.blobs[inputName].data.shape[3],
+                                                  net.blobs[inputName].data.shape[1]))
+    paramsFile.write("\nConvolution\n")
     paramsFile.write("1 botoom 1 top\n")
     try:
         biases = net.params[deploy.layer[1].name][1].data
@@ -161,8 +167,11 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
 
 
     net.forward()
-    convbaseArgs = [convbaseExecutable, outputPreffix + "input.txt",
-                    outputPreffix + "params.txt", outputPreffix + "convbase_output.txt"]
+    convbaseArgs = [convbaseExecutable,
+                    outputPreffix + "params.txt",
+                    outputPreffix + "input.txt",
+                    outputPreffix + "convbase_output.txt",
+                    "forward"]
     convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
     convbaseForward.wait()
 

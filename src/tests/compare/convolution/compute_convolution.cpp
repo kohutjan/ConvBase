@@ -2,50 +2,101 @@
 
 using namespace std;
 
+Tensor4D loadTensor4D(string tensorFile, bool gradients);
+void storeTensor4D(Tensor4D tensor, string tensorFile, bool gradients);
+Tensor4D testForward(string tensorFile, Net &net);
+Tensor4D testBackward(string tensorFile, Net &net);
 
 int main(int argc, char **argv)
 {
-  string inputFile(argv[1]);
-  ifstream inputStream(inputFile);
-  if (!inputStream.is_open())
-  {
-    cerr << "Unable to open input file." << endl;
-    return 1;
-  }
-  vector<int> inputParams(4);
-  for (auto& param: inputParams)
-  {
-    inputStream >> param;
-  }
-  vector<Tensor4D> input(1, Tensor4D(inputParams));
-  float * inputVal = input[0].GetData();
-  for (int i = 0; i < inputParams[0] * inputParams[1] * inputParams[2] *
-       inputParams[3]; ++i)
-  {
-    inputStream >> inputVal[i];
-  }
-  inputStream.close();
-
-
-  string paramsFile(argv[2]);
   Net net;
-  net.Load(paramsFile);
-  net.Init(input);
-  vector<Tensor4D> output = net.Forward(input);
+  net.Load(argv[1]);
+  net.Init();
 
-  ofstream outputStream(argv[3]);
-  if (!outputStream.is_open())
+  if (argv[4] == string("forward"))
   {
-    cout << "Unable to open output file." << endl;
-    return 2;
+    storeTensor4D(testForward(argv[2], net), argv[3], false);
   }
-  float * outputVal = output[0].GetData();
-  for (int i = 0; i < output[0].GetShape()[Nd] * output[0].GetShape()[Hd] *
-       output[0].GetShape()[Wd] * output[0].GetShape()[Cd]; ++i)
+  if (argv[4] == string("backward"))
   {
-    outputStream << outputVal[i] << endl;
+    storeTensor4D(testBackward(argv[2], net), argv[3], true);
   }
-  outputStream.close();
 
   return 0;
+}
+
+Tensor4D testForward(string tensorFile, Net &net)
+{
+  vector<Tensor4D> bottom(1, loadTensor4D(tensorFile, false));
+  vector<Tensor4D> top = net.Forward(bottom);
+  return top[0];
+}
+
+Tensor4D testBackward(string tensorFile, Net &net)
+{
+  vector<Tensor4D> top(1, loadTensor4D(tensorFile, true));
+  vector<Tensor4D> bottom = net.Backward(top);
+  return bottom[0];
+}
+
+Tensor4D loadTensor4D(string tensorFile, bool gradients)
+{
+  Tensor4D tensor;
+  ifstream tensorStream(tensorFile);
+  if (tensorStream.is_open())
+  {
+    vector<int> tensorParams(4);
+    for (auto& param: tensorParams)
+    {
+      tensorStream >> param;
+    }
+    tensor = Tensor4D(tensorParams);
+    float * tensorVal;
+    if (!gradients)
+    {
+      tensorVal = tensor.GetData();
+    }
+    else
+    {
+      tensorVal = tensor.GetGradients();
+    }
+    for (int i = 0; i < tensorParams[0] * tensorParams[1] * tensorParams[2] *
+         tensorParams[3]; ++i)
+    {
+      tensorStream >> tensorVal[i];
+    }
+    tensorStream.close();
+  }
+  else
+  {
+    cerr << "Unable to open with tensor data." << endl;
+  }
+  return tensor;
+}
+
+void storeTensor4D(Tensor4D tensor, string tensorFile, bool gradients)
+{
+  ofstream tensorStream(tensorFile);
+  if (tensorStream.is_open())
+  {
+    float * tensorVal;
+    if (!gradients)
+    {
+      tensorVal = tensor.GetData();
+    }
+    else
+    {
+      tensorVal = tensor.GetGradients();
+    }
+    for (int i = 0; i < tensor.GetShape()[Nd] * tensor.GetShape()[Hd] *
+         tensor.GetShape()[Wd] * tensor.GetShape()[Cd]; ++i)
+    {
+      tensorStream << tensorVal[i] << endl;
+    }
+    tensorStream.close();
+  }
+  else
+  {
+    cerr << "Unable to open file for storing tensor." << endl;
+  }
 }

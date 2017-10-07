@@ -49,6 +49,9 @@ void Im2Col::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 void Im2Col::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
   float * bottomGradientsVal = bottom[0].GetGradients();
+  fill(bottomGradientsVal, bottomGradientsVal + (this->bottomShape[0][Nd] *
+       this->bottomShape[0][Hd] * this->bottomShape[0][Wd] *
+       this->bottomShape[0][Cd]), 0.0);
   float * topGradientsVal = top[0].GetGradients();
   for (int i = 0; i < this->map.size(); ++i)
   {
