@@ -33,6 +33,7 @@ class Convolution : public Operator
     Tensor4D kernels;
     Tensor4D biases;
     Im2Col im2col;
+    Tensor4D col;
 };
 
 #endif

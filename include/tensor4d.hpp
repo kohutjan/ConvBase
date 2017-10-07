@@ -18,11 +18,15 @@ class Tensor4D
     {
       data = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
                                               shape[Cd]], std::default_delete<float[]>());
+      gradients = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
+                                                   shape[Cd]], std::default_delete<float[]>());
     }
     Tensor4D(std::vector<int> _shape) : shape(_shape)
     {
       data = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
                                               shape[Cd]], std::default_delete<float[]>());
+      gradients = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
+                                                   shape[Cd]], std::default_delete<float[]>());
     }
     Tensor4D(std::string _name, int _N, int _H, int _W, int _C) : name(_name), shape(4)
     {
@@ -32,6 +36,8 @@ class Tensor4D
       shape[Cd] = _C;
       data = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
                                               shape[Cd]], std::default_delete<float[]>());
+      gradients = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
+                                                   shape[Cd]], std::default_delete<float[]>());
     }
     Tensor4D(int _N, int _H, int _W, int _C) : shape(4)
     {
@@ -41,6 +47,8 @@ class Tensor4D
       shape[Cd] = _C;
       data = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
                                               shape[Cd]], std::default_delete<float[]>());
+      gradients = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
+                                                   shape[Cd]], std::default_delete<float[]>());
     }
     std::string GetName() { return name; }
     std::vector<int> GetShape() const { return shape; }
@@ -54,11 +62,16 @@ class Tensor4D
     {
       return data.get();
     }
+    float * GetGradients()
+    {
+      return gradients.get();
+    }
 
   private:
     std::string name;
     std::vector<int> shape;
     std::shared_ptr<float> data;
+    std::shared_ptr<float> gradients;
 };
 
 #endif
