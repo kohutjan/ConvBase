@@ -22,9 +22,18 @@ def parse_args():
     parser.add_argument('-e', '--convbase-executable',
                         required=True,
                         help="compute_convolution exacutable")
-    parser.add_argument('-b', '--bias',
+    parser.add_argument('-s', '--bias',
                         action='store_true',
                         help='Use bias.')
+    parser.add_argument('-f', '--forward',
+                        action='store_true',
+                        help='Compare forward pass.')
+    parser.add_argument('-b', '--backward',
+                        action='store_true',
+                        help='Compare backward pass.')
+    parser.add_argument('-w', '--weights',
+                        action='store_true',
+                        help='Compare weights gradients.')
     parser.add_argument('-p', '--params',
                         help='Syntax: Input shape: N,H,W,C  Conv params: kernelNumber,kernelSize,stride,pad')
     parser.add_argument('-c', '--cpu',
@@ -34,6 +43,10 @@ def parse_args():
                         action='store_true')
 
     args = parser.parse_args()
+
+    if not (args.forward or args.backward or args.weights):
+        sys.stdout.write("No tests to be done.\n")
+        sys.exit(1)
 
     return args
 
@@ -58,7 +71,7 @@ def main():
         else:
             print("GPU mode set.")
 
-    errorSum = 0
+    errorSum = np.zeros(3)
 
     for i in range(args.tests_number):
         tmpNetProto = tempfile.NamedTemporaryFile()
@@ -70,26 +83,27 @@ def main():
         tmpNetProto.close()
         sys.stdout.write("{}. ".format(i + 1))
         if not args.verbose:
-            sys.stdout.write("Input shape: {},{},{},{} ".format(net.blobs['data'].data.shape[0],
-                                                                net.blobs['data'].data.shape[2],
-                                                                net.blobs['data'].data.shape[3],
-                                                                net.blobs['data'].data.shape[1]))
+            sys.stdout.write("Bottom shape: {},{},{},{} ".format(net.blobs['data'].data.shape[0],
+                                                                 net.blobs['data'].data.shape[2],
+                                                                 net.blobs['data'].data.shape[3],
+                                                                 net.blobs['data'].data.shape[1]))
             convParams = deploy.layer[1].convolution_param
             sys.stdout.write("Conv params: {},{},{},{} ".format(convParams.num_output,
                                                                 convParams.kernel_size[0],
                                                                 convParams.stride[0],
                                                                 convParams.pad[0]))
-            sys.stdout.write("Output shape: {},{},{} | ".format(net.blobs['convolution'].data.shape[2],
-                                                                net.blobs['convolution'].data.shape[3],
-                                                                net.blobs['convolution'].data.shape[1]))
+            sys.stdout.write("Top shape: {},{},{}".format(net.blobs['convolution'].data.shape[2],
+                                                             net.blobs['convolution'].data.shape[3],
+                                                             net.blobs['convolution'].data.shape[1]))
 
         net.blobs['data'].data[...] = np.random.random_sample(net.blobs['data'].data.shape) - 0.5
+        net.blobs['convolution'].diff[...] = np.random.random_sample(net.blobs['convolution'].diff.shape) - 0.5
         net.params['convolution'][0].data[...] = np.random.random_sample(net.params['convolution'][0].data.shape) - 0.5
         if args.bias:
             net.params['convolution'][1].data[...] = np.random.random_sample(net.params['convolution'][1].data.shape) * 0.25 - 0.125
 
-        errorSum += compareConvolution(net, deploy, args.convbase_executable,
-                                       outputTop="convolution",
+        errorSum += compareConvolution(net, deploy, args.forward, args.backward,
+                                       args.weights, args.convbase_executable,
                                        outputPreffix="convolution_",
                                        verbose=args.verbose)
 
@@ -97,12 +111,17 @@ def main():
 
     print ("\n#############################################################")
     print ("Number of tests: {}\n".format(args.tests_number))
-    print ("Mean error: {}".format(meanError))
+    if args.forward:
+        print ("Mean forward error: {}".format(meanError[0]))
+    if args.backward:
+        print ("Mean backward error: {}".format(meanError[1]))
+    if args.weights:
+        print ("Mean weights gradients error: {}".format(meanError[2]))
     print ("#############################################################")
 
 
-def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
-                       outputTop=None, outputPreffix="", verbose=False):
+def compareConvolution(net, deploy, forward, backward, weightsGradients, convbaseExecutable, bottomName='data',
+                       topName='convolution', outputPreffix="", verbose=False):
 
     if verbose:
         stdOut = sys.stdout
@@ -110,19 +129,36 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
         stdOut = open(os.devnull, 'w')
 
     # Prepare input for C++ implementation
-    try:
-        os.remove(outputPreffix + "input.txt")
-    except OSError:
-        pass
-    inputFile = open(outputPreffix + "input.txt", "w")
-    nhwcInput = np.swapaxes(np.swapaxes(net.blobs[inputName].data, 1, 2), 2, 3).reshape(-1)
-    inputFile.write("{} {} {} {}\n".format(net.blobs[inputName].data.shape[0],
-                                           net.blobs[inputName].data.shape[2],
-                                           net.blobs[inputName].data.shape[3],
-                                           net.blobs[inputName].data.shape[1]))
-    for value in nhwcInput:
-        inputFile.write("{}\n".format(value))
-    inputFile.close()
+    if forward:
+        try:
+            os.remove(outputPreffix + "data_input.txt")
+        except OSError:
+            pass
+        dataInputFile = open(outputPreffix + "data_input.txt", "w")
+        nhwcDataInput = np.swapaxes(np.swapaxes(net.blobs[bottomName].data, 1, 2), 2, 3).reshape(-1)
+        dataInputFile.write("{} {} {} {}\n".format(net.blobs[bottomName].data.shape[0],
+                                                   net.blobs[bottomName].data.shape[2],
+                                                   net.blobs[bottomName].data.shape[3],
+                                                   net.blobs[bottomName].data.shape[1]))
+        for value in nhwcDataInput:
+            dataInputFile.write("{}\n".format(value))
+        dataInputFile.close()
+
+    if backward:
+        try:
+            os.remove(outputPreffix + "gradients_input.txt")
+        except OSError:
+            pass
+        gradientsInputFile = open(outputPreffix + "gradients_input.txt", "w")
+        nhwcGradientsInput = np.swapaxes(np.swapaxes(net.blobs[topName].diff, 1, 2), 2, 3).reshape(-1)
+        gradientsInputFile.write("{} {} {} {}\n".format(net.blobs[topName].diff.shape[0],
+                                                        net.blobs[topName].diff.shape[2],
+                                                        net.blobs[topName].diff.shape[3],
+                                                        net.blobs[topName].diff.shape[1]))
+        for value in nhwcGradientsInput:
+            gradientsInputFile.write("{}\n".format(value))
+        gradientsInputFile.close()
+
 
     try:
         os.remove(outputPreffix + "params.txt")
@@ -131,10 +167,10 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
     paramsFile = open(outputPreffix + "params.txt", "w")
     paramsFile.write("Input\n")
     paramsFile.write("1\n")
-    paramsFile.write("bottom {} {} {} {}\n".format(net.blobs[inputName].data.shape[0],
-                                                  net.blobs[inputName].data.shape[2],
-                                                  net.blobs[inputName].data.shape[3],
-                                                  net.blobs[inputName].data.shape[1]))
+    paramsFile.write("bottom {} {} {} {}\n".format(net.blobs[bottomName].data.shape[0],
+                                                  net.blobs[bottomName].data.shape[2],
+                                                  net.blobs[bottomName].data.shape[3],
+                                                  net.blobs[bottomName].data.shape[1]))
     paramsFile.write("\nConvolution\n")
     paramsFile.write("1 botoom 1 top\n")
     try:
@@ -163,36 +199,68 @@ def compareConvolution(net, deploy, convbaseExecutable, inputName='data',
 
     paramsFile.close()
 
-
-
-
     net.forward()
-    convbaseArgs = [convbaseExecutable,
-                    outputPreffix + "params.txt",
-                    outputPreffix + "input.txt",
-                    outputPreffix + "convbase_output.txt",
-                    "forward"]
-    convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
-    convbaseForward.wait()
+    net.backward()
+    if forward:
+        convbaseArgs = [convbaseExecutable,
+                        outputPreffix + "params.txt",
+                        outputPreffix + "data_input.txt",
+                        outputPreffix + "forward_convbase_output.txt",
+                        "forward"]
+        convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
+        convbaseForward.wait()
 
-    try:
-        os.remove(outputPreffix + "caffe_output.txt")
-    except OSError:
-        pass
-    outputFile = open(outputPreffix + "caffe_output.txt", "w")
-    nhwcOutput = np.swapaxes(np.swapaxes(net.blobs[outputTop].data, 1, 2), 2, 3).reshape(-1)
-    for value in nhwcOutput:
-        outputFile.write("{}\n".format(value))
-    outputFile.close()
+    if backward:
+        convbaseArgs = [convbaseExecutable,
+                        outputPreffix + "params.txt",
+                        outputPreffix + "gradients_input.txt",
+                        outputPreffix + "backward_convbase_output.txt",
+                        "backward"]
+        convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
+        convbaseForward.wait()
 
-    error, code = compareOutputs(outputPreffix + "caffe_output.txt",
-                                 outputPreffix + "convbase_output.txt")
+    forwardError = 0;
+    backwardError = 0;
+    weightsGradientsError = 0;
 
-    if verbose:
-        sys.stdout.write("\nError: ")
-    else:
-        sys.stdout.write("Error: ")
+    if forward:
+        try:
+            os.remove(outputPreffix + "forward_caffe_output.txt")
+        except OSError:
+            pass
+        outputFile = open(outputPreffix + "forward_caffe_output.txt", "w")
+        nhwcOutput = np.swapaxes(np.swapaxes(net.blobs[topName].data, 1, 2), 2, 3).reshape(-1)
+        for value in nhwcOutput:
+            outputFile.write("{}\n".format(value))
+        outputFile.close()
 
+        error, code = compareOutputs(outputPreffix + "forward_caffe_output.txt",
+                                     outputPreffix + "forward_convbase_output.txt")
+        sys.stdout.write("\nForward ")
+        forwardError = printError(verbose, error, code)
+
+    if backward:
+        try:
+            os.remove(outputPreffix + "backward_caffe_output.txt")
+        except OSError:
+            pass
+        outputFile = open(outputPreffix + "backward_caffe_output.txt", "w")
+        nhwcOutput = np.swapaxes(np.swapaxes(net.blobs[bottomName].diff, 1, 2), 2, 3).reshape(-1)
+        for value in nhwcOutput:
+            outputFile.write("{}\n".format(value))
+        outputFile.close()
+
+        error, code = compareOutputs(outputPreffix + "backward_caffe_output.txt",
+                                     outputPreffix + "backward_convbase_output.txt")
+        sys.stdout.write("\nBackward ")
+        backwardError = printError(verbose, error, code)
+
+    return np.asarray((forwardError, backwardError, weightsGradientsError))
+
+
+def printError(verbose, error, code):
+
+    sys.stdout.write("error: ")
     if code == 'OK':
         sys.stdout.write("{}\n".format(error))
         return error
@@ -260,17 +328,17 @@ def createConvolutionNet(params, bias):
         height = random.randint(1, 32)
         width = random.randint(1, 32)
 
-        """
-        kernelNumber = 10
-        kernelSize = 2
-        stride = 1
-        pad = 1
 
-        num = 1
-        channels = 1
-        height = 2
-        width = 2
-        """
+        #kernelNumber = 1
+        #kernelSize = 2
+        #stride = 1
+        pad = 0
+
+        #num = 1
+        #channels = 2
+        #height = 3
+        #width = 3
+
 
         # Adjust input to exactly fit conv params
         height = adjustDimension(height, kernelSize, stride, pad)
@@ -283,7 +351,7 @@ def createConvolutionNet(params, bias):
                                                kernel_size=kernelSize,
                                                stride=stride, pad=pad)
 
-    return str(net.to_proto())
+    return "force_backward: true\n" + str(net.to_proto())
 
 
 def adjustDimension(dimension, kernelSize, stride, pad):

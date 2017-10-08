@@ -6,18 +6,17 @@ using namespace Eigen;
 
 void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  this->col = Tensor4D(im2col.GetTopShape()[0]);
   this->im2col.Forward(bottom, vector<Tensor4D>(1, this->col));
   Map<Matrix<float,
              Dynamic,
              Dynamic,
-             RowMajor> >
+             RowMajor>>
              eigenColData(this->col.GetData(), this->col.GetShape()[Hd],
                           this->col.GetShape()[Wd]);
   Map<Matrix<float,
              Dynamic,
              Dynamic,
-             ColMajor> >
+             ColMajor>>
              eigenKernels(this->kernels.GetData(), this->kernelSize *
                           this->kernelSize * this->kernels.GetShape()[Cd],
                           this->numberOfKernels);
@@ -25,7 +24,7 @@ void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
   Map<Matrix<float,
              Dynamic,
              Dynamic,
-             RowMajor> >
+             RowMajor>>
              eigenTopData(top[0].GetData(), eigenColData.rows(),
                           eigenKernels.cols());
 
@@ -59,26 +58,34 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
   Map<Matrix<float,
              Dynamic,
              Dynamic,
-             RowMajor> >
+             RowMajor>>
              eigenTopGradients(top[0].GetGradients(), this->topShape[0][Nd] *
                                this->topShape[0][Hd] * this->topShape[0][Wd],
                                this->topShape[0][Cd]);
   Map<Matrix<float,
              Dynamic,
              Dynamic,
-             RowMajor> >
-             eigenTransposeKernels(this->kernels.GetData(), this->kernelSize *
-                                   this->kernelSize * this->kernels.GetShape()[Cd],
-                                   this->numberOfKernels);
+             RowMajor>>
+             eigenTransposeKernels(this->kernels.GetData(),
+                                   this->numberOfKernels, this->kernelSize *
+                                   this->kernelSize * this->kernels.GetShape()[Cd]);
 
   Map<Matrix<float,
              Dynamic,
              Dynamic,
-             RowMajor> >
+             RowMajor>>
              eigenColGradients(this->col.GetGradients(), this->col.GetShape()[Hd],
                                this->col.GetShape()[Wd]);
 
   eigenColGradients = eigenTopGradients * eigenTransposeKernels;
+
+
+  cout << eigenTopGradients << endl;
+  cout << endl;
+  cout << eigenTransposeKernels << endl;
+  cout << endl;
+  cout << eigenColGradients << endl;
+  
 
   this->im2col.Backward(bottom, vector<Tensor4D>(1, this->col));
 }
@@ -91,4 +98,5 @@ void Convolution::ComputeTopShape()
   this->topShape[0][Cd] = this->numberOfKernels;
   im2col.SetBottomShape(this->bottomShape);
   im2col.ComputeTopShape();
+  this->col = Tensor4D(im2col.GetTopShape()[0]);
 }

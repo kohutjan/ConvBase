@@ -1,4 +1,5 @@
 #include "operators/im2col.hpp"
+#include <iostream>
 
 using namespace std;
 
@@ -55,13 +56,15 @@ void Im2Col::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
   float * topGradientsVal = top[0].GetGradients();
   for (int i = 0; i < this->map.size(); ++i)
   {
+    cout << this->map[i];
     bottomGradientsVal[this->map[i]] += topGradientsVal[i];
   }
+  cout << endl;
 }
 
 void Im2Col::ComputeMap()
 {
-  this->map = vector<int>(this->topShape[0][Hd] * this->topShape[0][Wd]);
+  this->map.clear();
   for (int n = 0; n < this->bottomShape[0][Nd]; ++n)
   {
     for (int h = 0; h <= this->bottomShape[0][Hd] + 2 * this->pad - this->kernelSize; h += this->stride)
@@ -72,9 +75,15 @@ void Im2Col::ComputeMap()
         {
           for (int wK = 0; wK < this->kernelSize; ++wK)
           {
-            this->map.push_back((n) * ((this->bottomShape[0][Wd] + 2 * this->pad) * (this->bottomShape[0][Hd] + 2 * this->pad)) +
-                                (h + hK) * (this->bottomShape[0][Wd] + 2 * this->pad) +
-                                (w + wK));
+            for (int c = 0; c < this->bottomShape[0][Cd]; ++c)
+            {
+              this->map.push_back((n) * ((this->bottomShape[0][Hd] + 2 * this->pad) *
+                                         (this->bottomShape[0][Wd] + 2 * this->pad) *
+                                          this->bottomShape[0][Cd]) +
+                                  (h + hK) * ((this->bottomShape[0][Wd] + 2 * this->pad) *
+                                               this->bottomShape[0][Cd]) +
+                                  (w + wK) * (this->bottomShape[0][Cd]) + c);
+            }
           }
         }
       }
