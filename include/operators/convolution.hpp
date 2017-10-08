@@ -22,6 +22,8 @@ class Convolution : public Operator
     int GetStride() const { return stride; }
     int GetPad() const { return pad; }
     bool GetBias() const { return bias; }
+    Tensor4D GetKernels() const { return kernels; }
+    Tensor4D GetBiases() const { return biases; }
     ~Convolution(){}
 
   private:

@@ -120,7 +120,7 @@ def main():
     print ("#############################################################")
 
 
-def compareConvolution(net, deploy, forward, backward, weightsGradients, convbaseExecutable, bottomName='data',
+def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutable, bottomName='data',
                        topName='convolution', outputPreffix="", verbose=False):
 
     if verbose:
@@ -129,7 +129,7 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
         stdOut = open(os.devnull, 'w')
 
     # Prepare input for C++ implementation
-    if forward:
+    if forward or weights:
         try:
             os.remove(outputPreffix + "data_input.txt")
         except OSError:
@@ -144,7 +144,7 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
             dataInputFile.write("{}\n".format(value))
         dataInputFile.close()
 
-    if backward:
+    if backward or weights:
         try:
             os.remove(outputPreffix + "gradients_input.txt")
         except OSError:
@@ -201,7 +201,7 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
 
     net.forward()
     net.backward()
-    if forward:
+    if forward and not weights:
         convbaseArgs = [convbaseExecutable,
                         outputPreffix + "params.txt",
                         outputPreffix + "data_input.txt",
@@ -210,14 +210,24 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
         convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
         convbaseForward.wait()
 
-    if backward:
+    if backward and not weights:
         convbaseArgs = [convbaseExecutable,
                         outputPreffix + "params.txt",
                         outputPreffix + "gradients_input.txt",
                         outputPreffix + "backward_convbase_output.txt",
                         "backward"]
-        convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
-        convbaseForward.wait()
+        convbaseBackward = subprocess.Popen(convbaseArgs, stdout=stdOut)
+        convbaseBackward.wait()
+
+    if weights:
+        convbaseArgs = [convbaseExecutable,
+                        outputPreffix + "params.txt",
+                        outputPreffix,
+                        outputPreffix,
+                        "weights"]
+        convbaseWeights = subprocess.Popen(convbaseArgs, stdout=stdOut)
+        convbaseWeights.wait()
+
 
     forwardError = 0;
     backwardError = 0;
@@ -256,6 +266,23 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
                                      outputPreffix + "backward_convbase_output.txt")
         sys.stdout.write("Backward ")
         backwardError = printError(verbose, error, code)
+
+    if weights:
+        try:
+            os.remove(outputPreffix + "weights_caffe_output.txt")
+        except OSError:
+            pass
+        outputFile = open(outputPreffix + "weights_caffe_output.txt", "w")
+        nhwcOutput = np.swapaxes(np.swapaxes(net.params[topName][0].diff, 1, 2), 2, 3).reshape(-1)
+        for value in nhwcOutput:
+            outputFile.write("{}\n".format(value))
+        outputFile.close()
+
+        error, code = compareOutputs(outputPreffix + "weights_caffe_output.txt",
+                                     outputPreffix + "weights_convbase_output.txt")
+        sys.stdout.write("Weights gradients ")
+        weightsGradientsError = printError(verbose, error, code)
+
 
     return np.asarray((forwardError, backwardError, weightsGradientsError))
 

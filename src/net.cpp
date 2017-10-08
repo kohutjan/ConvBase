@@ -59,7 +59,7 @@ void Net::LoadInput(ifstream& modelStream)
 
 }
 
-unique_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
+shared_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
 {
   vector<vector<string>> IO = this->LoadIO(modelStream);
   vector<int> parameters(5);
@@ -102,12 +102,12 @@ unique_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
   this->PrintIO(IO);
   cout << " | params: " << parameters[0] << "," << parameters[1] << ","
        << parameters[2] << "," << parameters[3] << "," << bias << endl;
-  return unique_ptr<Operator>(new Convolution(IO, parameters[0], parameters[1],
+  return shared_ptr<Operator>(new Convolution(IO, parameters[0], parameters[1],
                                               parameters[2], parameters[3],
                                               bias, kernels, biases));
 }
 
-unique_ptr<Operator> Net::LoadPooling(ifstream &modelStream)
+shared_ptr<Operator> Net::LoadPooling(ifstream &modelStream)
 {
   vector<vector<string>> IO = this->LoadIO(modelStream);
   vector<int> parameters(3);
@@ -119,20 +119,20 @@ unique_ptr<Operator> Net::LoadPooling(ifstream &modelStream)
   this->PrintIO(IO);
   cout << " | params: " << parameters[0] << ',' << parameters[1] << ","
        << parameters[2] << endl;
-  return unique_ptr<Operator>(new Pooling(IO, parameters[0], parameters[1],
+  return shared_ptr<Operator>(new Pooling(IO, parameters[0], parameters[1],
                                           parameters[2]));
 }
 
-unique_ptr<Operator> Net::LoadReLU(ifstream &modelStream)
+shared_ptr<Operator> Net::LoadReLU(ifstream &modelStream)
 {
   vector<vector<string>> IO = this->LoadIO(modelStream);
   cout << "type: ReLU | ";
   this->PrintIO(IO);
   cout << endl;
-  return unique_ptr<Operator>(new ReLU(IO));
+  return shared_ptr<Operator>(new ReLU(IO));
 }
 
-unique_ptr<Operator> Net::LoadReshape(ifstream &modelStream)
+shared_ptr<Operator> Net::LoadReshape(ifstream &modelStream)
 {
   vector<vector<string>> IO = this->LoadIO(modelStream);
   vector<int> parameters(3);
@@ -144,7 +144,7 @@ unique_ptr<Operator> Net::LoadReshape(ifstream &modelStream)
   this->PrintIO(IO);
   cout << " | params: " << parameters[0] << ',' << parameters[1] << ","
        << parameters[2] << endl;
-  return unique_ptr<Operator>(new Reshape(IO, parameters[0], parameters[1],
+  return shared_ptr<Operator>(new Reshape(IO, parameters[0], parameters[1],
                                           parameters[2]));
 }
 

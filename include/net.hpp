@@ -17,11 +17,11 @@ class Net
     std::vector<Tensor4D> Forward(std::vector<Tensor4D> bottom);
     std::vector<Tensor4D> Backward(std::vector<Tensor4D> top);
     bool LoadFromStream(std::ifstream &modelStream);
-    std::unique_ptr<Operator> LoadConvolution(std::ifstream &modelStream);
-    std::unique_ptr<Operator> LoadPooling(std::ifstream &modelStream);
-    std::unique_ptr<Operator> LoadReLU(std::ifstream &modelStream);
-    std::unique_ptr<Operator> LoadReshape(std::ifstream &modelStream);
-    std::vector<std::unique_ptr<Operator>> operators;
+    std::shared_ptr<Operator> LoadConvolution(std::ifstream &modelStream);
+    std::shared_ptr<Operator> LoadPooling(std::ifstream &modelStream);
+    std::shared_ptr<Operator> LoadReLU(std::ifstream &modelStream);
+    std::shared_ptr<Operator> LoadReshape(std::ifstream &modelStream);
+    std::vector<std::shared_ptr<Operator>> operators;
     ~Net(){};
   private:
     std::vector<std::vector<std::string>> LoadIO(std::ifstream &modelStream);
