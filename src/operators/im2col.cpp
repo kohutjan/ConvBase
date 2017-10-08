@@ -1,3 +1,5 @@
+#define PAD -1
+
 #include "operators/im2col.hpp"
 #include <iostream>
 
@@ -54,17 +56,21 @@ void Im2Col::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
        this->bottomShape[0][Hd] * this->bottomShape[0][Wd] *
        this->bottomShape[0][Cd]), 0.0);
   float * topGradientsVal = top[0].GetGradients();
-  for (int i = 0; i < this->map.size(); ++i)
+  for (int i = 0; i < this->col2imMap.size(); ++i)
   {
-    cout << this->map[i];
-    bottomGradientsVal[this->map[i]] += topGradientsVal[i];
+    cout << this->col2imMap[i] << " ";
+    if (this->col2imMap[i] != PAD)
+    {
+      bottomGradientsVal[this->col2imMap[i]] += topGradientsVal[i];
+    }
   }
   cout << endl;
 }
 
-void Im2Col::ComputeMap()
+
+void Im2Col::ComputeCol2ImMap()
 {
-  this->map.clear();
+  this->col2imMap.clear();
   for (int n = 0; n < this->bottomShape[0][Nd]; ++n)
   {
     for (int h = 0; h <= this->bottomShape[0][Hd] + 2 * this->pad - this->kernelSize; h += this->stride)
@@ -75,14 +81,32 @@ void Im2Col::ComputeMap()
         {
           for (int wK = 0; wK < this->kernelSize; ++wK)
           {
-            for (int c = 0; c < this->bottomShape[0][Cd]; ++c)
+            bool insidePad = ((h + hK) < this->pad) || ((w + wK) < this->pad) ||
+                             ((h + hK) >= this->bottomShape[0][Hd] + this->pad) ||
+                             ((w + wK) >= this->bottomShape[0][Wd] + this->pad);
+            if (insidePad)
             {
-              this->map.push_back((n) * ((this->bottomShape[0][Hd] + 2 * this->pad) *
-                                         (this->bottomShape[0][Wd] + 2 * this->pad) *
-                                          this->bottomShape[0][Cd]) +
-                                  (h + hK) * ((this->bottomShape[0][Wd] + 2 * this->pad) *
-                                               this->bottomShape[0][Cd]) +
-                                  (w + wK) * (this->bottomShape[0][Cd]) + c);
+              for (int c = 0; c < this->bottomShape[0][Cd]; ++c)
+              {
+                this->col2imMap.push_back(PAD);
+              }
+            }
+            else
+            { //TODO make it more readable
+              int padOffset = (n * (this->pad * (this->bottomShape[0][Wd] + 2 *
+                                    this->pad + this->bottomShape[0][Hd]) * 2) +
+                               this->pad * (this->bottomShape[0][Wd] + 2 * this->pad)
+                               + ((h + hK - this->pad) * 2 * this->pad + this->pad))
+                               * this->bottomShape[0][Cd];
+              for (int c = 0; c < this->bottomShape[0][Cd]; ++c)
+              {
+                this->col2imMap.push_back((n) * ((this->bottomShape[0][Hd] + 2 * this->pad) *
+                                           (this->bottomShape[0][Wd] + 2 * this->pad) *
+                                            this->bottomShape[0][Cd]) +
+                                    (h + hK) * ((this->bottomShape[0][Wd] + 2 * this->pad) *
+                                                 this->bottomShape[0][Cd]) +
+                                    (w + wK) * (this->bottomShape[0][Cd]) + c - padOffset);
+              }
             }
           }
         }
@@ -102,5 +126,5 @@ void Im2Col::ComputeTopShape()
                            this->bottomShape[0][Nd];
   this->topShape[0][Wd] = this->kernelSize * this->kernelSize * this->bottomShape[0][Cd];
   this->topShape[0][Cd] = 1;
-  this->ComputeMap();
+  this->ComputeCol2ImMap();
 }

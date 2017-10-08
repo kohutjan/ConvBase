@@ -12,18 +12,18 @@ class Im2Col : public Operator
     void Forward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
     void Backward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
     void ComputeTopShape();
-    void ComputeMap();
+    void ComputeCol2ImMap();
     int GetKernelSize() const { return kernelSize; }
     int GetStride() const { return stride; }
     int GetPad() const { return pad; }
-    std::vector<int> GetMap() const { return map; }
+    std::vector<int> GetIm2ColMap() const { return col2imMap; }
     ~Im2Col(){}
 
   private:
     const int kernelSize;
     const int stride;
     const int pad;
-    std::vector<int> map;
+    std::vector<int> col2imMap;
 };
 
 #endif

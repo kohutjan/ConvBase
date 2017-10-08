@@ -223,6 +223,8 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
     backwardError = 0;
     weightsGradientsError = 0;
 
+    sys.stdout.write("\n")
+
     if forward:
         try:
             os.remove(outputPreffix + "forward_caffe_output.txt")
@@ -236,7 +238,7 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
 
         error, code = compareOutputs(outputPreffix + "forward_caffe_output.txt",
                                      outputPreffix + "forward_convbase_output.txt")
-        sys.stdout.write("\nForward ")
+        sys.stdout.write("Forward ")
         forwardError = printError(verbose, error, code)
 
     if backward:
@@ -252,7 +254,7 @@ def compareConvolution(net, deploy, forward, backward, weightsGradients, convbas
 
         error, code = compareOutputs(outputPreffix + "backward_caffe_output.txt",
                                      outputPreffix + "backward_convbase_output.txt")
-        sys.stdout.write("\nBackward ")
+        sys.stdout.write("Backward ")
         backwardError = printError(verbose, error, code)
 
     return np.asarray((forwardError, backwardError, weightsGradientsError))
@@ -328,17 +330,17 @@ def createConvolutionNet(params, bias):
         height = random.randint(1, 32)
         width = random.randint(1, 32)
 
+        """
+        kernelNumber = 1
+        kernelSize = 2
+        stride = 1
+        pad = 1
 
-        #kernelNumber = 1
-        #kernelSize = 2
-        #stride = 1
-        pad = 0
-
-        #num = 1
-        #channels = 2
-        #height = 3
-        #width = 3
-
+        num = 2
+        channels = 1
+        height = 2
+        width = 2
+        """
 
         # Adjust input to exactly fit conv params
         height = adjustDimension(height, kernelSize, stride, pad)
