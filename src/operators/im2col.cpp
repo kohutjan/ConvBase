@@ -1,7 +1,6 @@
 #define PAD -1
 
 #include "operators/im2col.hpp"
-#include <iostream>
 
 using namespace std;
 
@@ -58,13 +57,11 @@ void Im2Col::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
   float * topGradientsVal = top[0].GetGradients();
   for (int i = 0; i < this->col2imMap.size(); ++i)
   {
-    cout << this->col2imMap[i] << " ";
     if (this->col2imMap[i] != PAD)
     {
       bottomGradientsVal[this->col2imMap[i]] += topGradientsVal[i];
     }
   }
-  cout << endl;
 }
 
 

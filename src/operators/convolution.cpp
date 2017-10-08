@@ -79,15 +79,32 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 
   eigenColGradients = eigenTopGradients * eigenTransposeKernels;
 
-
+  /*
   cout << eigenTopGradients << endl;
   cout << endl;
   cout << eigenTransposeKernels << endl;
   cout << endl;
   cout << eigenColGradients << endl;
-  
+  */
 
   this->im2col.Backward(bottom, vector<Tensor4D>(1, this->col));
+
+  Map<Matrix<float,
+             Dynamic,
+             Dynamic,
+             ColMajor>>
+             eigenTransposeColData(this->col.GetData(), this->col.GetShape()[Wd],
+                                   this->col.GetShape()[Hd]);
+
+  Map<Matrix<float,
+             Dynamic,
+             Dynamic,
+             ColMajor>>
+             eigenKernelsGradients(this->kernels.GetGradients(), this->kernelSize *
+                                   this->kernelSize * this->kernels.GetShape()[Cd],
+                                   this->numberOfKernels);
+
+  eigenKernelsGradients = eigenTransposeColData * eigenTopGradients;
 }
 
 void Convolution::ComputeTopShape()
