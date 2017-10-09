@@ -148,6 +148,15 @@ shared_ptr<Operator> Net::LoadReshape(ifstream &modelStream)
                                           parameters[2]));
 }
 
+shared_ptr<Operator> Net::LoadSoftmaxCrossEntropy(ifstream &modelStream)
+{
+  vector<vector<string>> IO = this->LoadIO(modelStream);
+  cout << "type: SoftmaxCrossEntropy | ";
+  this->PrintIO(IO);
+  cout << endl;
+  return shared_ptr<Operator>(new SoftmaxCrossEntropy(IO));
+}
+
 bool Net::Load(string modelName)
 {
   cout << endl;
@@ -198,6 +207,11 @@ bool Net::LoadFromStream(ifstream &modelStream)
     if (operatorName == "Reshape")
     {
       this->operators.push_back(this->LoadReshape(modelStream));
+      continue;
+    }
+    if (operatorName == "SoftmaxCrossEntropy")
+    {
+      this->operators.push_back(this->LoadSoftmaxCrossEntropy(modelStream));
       continue;
     }
   }

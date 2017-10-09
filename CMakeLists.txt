@@ -16,7 +16,8 @@ add_executable(ConvBase
                ${ConvBase_SRC_DIR}/operators/pooling.cpp
                ${ConvBase_SRC_DIR}/operators/relu.cpp
                ${ConvBase_SRC_DIR}/operators/reshape.cpp
-               ${ConvBase_SRC_DIR}/operators/im2col.cpp)
+               ${ConvBase_SRC_DIR}/operators/im2col.cpp
+               ${ConvBase_SRC_DIR}/operators/softmax_cross_entropy.cpp)
 
 
 add_executable(compute_convolution
@@ -26,4 +27,5 @@ add_executable(compute_convolution
                ${ConvBase_SRC_DIR}/operators/pooling.cpp
                ${ConvBase_SRC_DIR}/operators/relu.cpp
                ${ConvBase_SRC_DIR}/operators/reshape.cpp
-               ${ConvBase_SRC_DIR}/operators/im2col.cpp)
+               ${ConvBase_SRC_DIR}/operators/im2col.cpp
+               ${ConvBase_SRC_DIR}/operators/softmax_cross_entropy.cpp)
