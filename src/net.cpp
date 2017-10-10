@@ -144,8 +144,7 @@ shared_ptr<Operator> Net::LoadReshape(ifstream &modelStream)
   this->PrintIO(IO);
   cout << " | params: " << parameters[0] << ',' << parameters[1] << ","
        << parameters[2] << endl;
-  return shared_ptr<Operator>(new Reshape(IO, parameters[0], parameters[1],
-                                          parameters[2]));
+  return shared_ptr<Operator>(new Reshape(IO, parameters));
 }
 
 shared_ptr<Operator> Net::LoadSoftmaxCrossEntropy(ifstream &modelStream)

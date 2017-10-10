@@ -26,11 +26,8 @@ class Operator
     Operator(){}
     std::vector<std::vector<int>> bottomShape;
     std::vector<std::vector<int>> topShape;
-
-  private:
     const std::vector<std::string> bottomName;
     const std::vector<std::string> topName;
-
 };
 
 #endif

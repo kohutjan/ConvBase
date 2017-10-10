@@ -52,6 +52,7 @@ class Tensor4D
     }
     std::string GetName() { return name; }
     std::vector<int> GetShape() const { return shape; }
+    void SetShape(std::vector<int> _shape) { shape = _shape; }
     int GetSize() { return shape[Nd] * shape[Hd] * shape[Wd] * shape[Cd]; }
     float * GetPixel(int n, int h, int w)
     {
