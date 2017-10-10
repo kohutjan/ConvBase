@@ -15,6 +15,7 @@ class Net
   public:
     bool Load(std::string modelName);
     void Init();
+    void PrintShapes();
     std::vector<Tensor4D> Forward(std::vector<Tensor4D> bottom);
     std::vector<Tensor4D> Backward(std::vector<Tensor4D> top);
     bool LoadFromStream(std::ifstream &modelStream);

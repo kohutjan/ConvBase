@@ -10,7 +10,7 @@ class Convolution : public Operator
   public:
     Convolution(std::vector<std::vector<std::string>> IO, int _numberOfKernels,
                 int _kernelSize, int _stride, int _pad, bool _bias,
-                Tensor4D _kernels, Tensor4D _biases) : Operator(IO),
+                Tensor4D _kernels, Tensor4D _biases) : Operator("Convolution", IO),
                 numberOfKernels(_numberOfKernels), kernelSize(_kernelSize),
                 stride(_stride), pad(_pad), bias(_bias), kernels(_kernels),
                 biases(_biases), im2col(_kernelSize, _stride, _pad){}

@@ -7,6 +7,7 @@
 class Operator
 {
   public:
+    std::string GetType() const { return type; }
     std::vector<std::string> GetBottomName() const { return bottomName; }
     std::vector<std::string> GetTopName() const { return topName; }
     std::vector<std::vector<int> > GetBottomShape() const { return bottomShape; }
@@ -18,16 +19,19 @@ class Operator
     virtual ~Operator(){};
 
   protected:
-    Operator(std::vector<std::vector<std::string>> IO) : bottomName(IO[0]), topName(IO[1])
+    Operator(std::string _type, std::vector<std::vector<std::string>> IO) :
+             type(_type), bottomName(IO[0]), topName(IO[1])
     {
       bottomShape = std::vector<std::vector<int>>(bottomName.size(), std::vector<int>(4));
       topShape = std::vector<std::vector<int>>(topName.size(), std::vector<int>(4));
     }
     Operator(){}
-    std::vector<std::vector<int>> bottomShape;
-    std::vector<std::vector<int>> topShape;
+    const std::string type;
     const std::vector<std::string> bottomName;
     const std::vector<std::string> topName;
+    std::vector<std::vector<int>> bottomShape;
+    std::vector<std::vector<int>> topShape;
+
 };
 
 #endif

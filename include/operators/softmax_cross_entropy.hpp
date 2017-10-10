@@ -7,7 +7,8 @@
 class SoftmaxCrossEntropy : public Operator
 {
   public:
-    SoftmaxCrossEntropy(std::vector<std::vector<std::string>> IO) : Operator(IO){}
+    SoftmaxCrossEntropy(std::vector<std::vector<std::string>> IO) :
+                        Operator("SoftmaxCrossEntropy", IO){}
     void Forward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
     void Backward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
     void ComputeTopShape();
