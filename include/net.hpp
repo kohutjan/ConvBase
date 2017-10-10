@@ -13,11 +13,30 @@
 class Net
 {
   public:
+    Net()
+    {
+      inputs = std::map<std::string, std::vector<int>>();
+      tensor4DContainer = std::map<std::string, Tensor4D>();
+    }
     bool Load(std::string modelName);
     void Init();
     void PrintShapes();
-    std::vector<Tensor4D> Forward(std::vector<Tensor4D> bottom);
-    std::vector<Tensor4D> Backward(std::vector<Tensor4D> top);
+    void Forward();
+    void Backward();
+    void UpdateWeights(float learningRate);
+    std::map<std::string, Tensor4D> GetTensor4DContainer() const { return tensor4DContainer; }
+    void AddTensor4DToContainer(std::string name, Tensor4D tensor)
+    {
+      tensor.SetName(name);
+      tensor4DContainer[name] = tensor;
+    }
+    Tensor4D GetTensor4DFromContainer(std::string name)
+    {
+      if (tensor4DContainer.find(name) != tensor4DContainer.end())
+      {
+        return tensor4DContainer[name];
+      }
+    }
     bool LoadFromStream(std::ifstream &modelStream);
     std::shared_ptr<Operator> LoadConvolution(std::ifstream &modelStream);
     std::shared_ptr<Operator> LoadPooling(std::ifstream &modelStream);
@@ -31,6 +50,7 @@ class Net
     void PrintIO(std::vector<std::vector<std::string>> IO);
     void LoadInput(std::ifstream &modelStream);
     std::map<std::string, std::vector<int>> inputs;
+    std::map<std::string, Tensor4D> tensor4DContainer;
 };
 
 #endif

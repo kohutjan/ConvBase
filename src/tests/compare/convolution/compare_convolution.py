@@ -172,7 +172,7 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
                                                   net.blobs[bottomName].data.shape[3],
                                                   net.blobs[bottomName].data.shape[1]))
     paramsFile.write("\nConvolution\n")
-    paramsFile.write("1 botoom 1 top\n")
+    paramsFile.write("1 bottom 1 top\n")
     try:
         biases = net.params[deploy.layer[1].name][1].data
         biasTerm = 1

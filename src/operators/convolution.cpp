@@ -107,6 +107,11 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
   eigenKernelsGradients = eigenTransposeColData * eigenTopGradients;
 }
 
+void Convolution::UpdateWeights(float learningRate)
+{
+
+}
+
 void Convolution::ComputeTopShape()
 {
   this->topShape[0][Nd] = this->bottomShape[0][Nd];

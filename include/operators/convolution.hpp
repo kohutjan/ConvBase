@@ -17,6 +17,7 @@ class Convolution : public Operator
     void Forward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
     void Backward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
     void ComputeTopShape();
+    void UpdateWeights(float learningRate);
     int GetNumberOfKernels() const { return numberOfKernels; }
     int GetKernelSize() const { return kernelSize; }
     int GetStride() const { return stride; }

@@ -36,16 +36,18 @@ int main(int argc, char **argv)
 
 Tensor4D testForward(string tensorFile, Net &net)
 {
-  vector<Tensor4D> bottom(1, loadTensor4D(tensorFile, false));
-  vector<Tensor4D> top = net.Forward(bottom);
-  return top[0];
+  Tensor4D bottom = loadTensor4D(tensorFile, false);
+  net.AddTensor4DToContainer("bottom", bottom);
+  net.Forward();
+  return net.GetTensor4DFromContainer("top");
 }
 
 Tensor4D testBackward(string tensorFile, Net &net)
 {
-  vector<Tensor4D> top(1, loadTensor4D(tensorFile, true));
-  vector<Tensor4D> bottom = net.Backward(top);
-  return bottom[0];
+  Tensor4D top = loadTensor4D(tensorFile, true);
+  net.AddTensor4DToContainer("top", top);
+  net.Backward();
+  return net.GetTensor4DFromContainer("bottom");
 }
 
 Tensor4D loadTensor4D(string tensorFile, bool gradients)

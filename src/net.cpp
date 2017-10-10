@@ -46,7 +46,6 @@ void Net::LoadInput(ifstream& modelStream)
   modelStream >> numberOfInputs;
   for (int i = 0; i < numberOfInputs; ++i)
   {
-    this->inputs = map<string, vector<int>>();
     string inputName;
     modelStream >> inputName;
     vector<int> inputParams(4);
@@ -264,20 +263,64 @@ void Net::Init()
   this->PrintShapes();
 }
 
-vector<Tensor4D> Net::Forward(vector<Tensor4D> bottom)
+void Net::Forward()
 {
-   //TODO generalize
-   vector<Tensor4D> top(1, Tensor4D(this->operators[0]->GetTopShape()[0]));
-   this->operators[0]->Forward(bottom, top);
-   return top;
+  for (auto& op: this->operators)
+  {
+    vector<Tensor4D> tmpBottom;
+    for (auto& bottomName: op->GetBottomName())
+    {
+      if (this->tensor4DContainer.find(bottomName) != this->tensor4DContainer.end())
+      {
+        tmpBottom.push_back(this->tensor4DContainer[bottomName]);
+      }
+    }
+    vector<Tensor4D> tmpTop;
+    for (int topIndex = 0; topIndex < op->GetTopName().size(); ++topIndex)
+    {
+      if (this->tensor4DContainer.find(op->GetTopName()[topIndex]) == this->tensor4DContainer.end())
+      {
+        this->tensor4DContainer[op->GetTopName()[topIndex]] = Tensor4D(op->GetTopName()[topIndex],
+                                                                       op->GetTopShape()[topIndex]);
+      }
+      tmpTop.push_back(this->tensor4DContainer[op->GetTopName()[topIndex]]);
+    }
+    op->Forward(tmpBottom, tmpTop);
+  }
 }
 
-vector<Tensor4D> Net::Backward(vector<Tensor4D> top)
+void Net::Backward()
 {
-  //TODO generalize
-  vector<Tensor4D> bottom(1, Tensor4D(this->operators[0]->GetBottomShape()[0]));
-  this->operators[0]->Backward(bottom, top);
-  return bottom;
+  for (auto op = this->operators.rbegin(); op != this->operators.rend(); ++op)
+  {
+    vector<Tensor4D> tmpTop;
+    for (auto& topName: (*op)->GetTopName())
+    {
+      if (this->tensor4DContainer.find(topName) != this->tensor4DContainer.end())
+      {
+        tmpTop.push_back(this->tensor4DContainer[topName]);
+      }
+    }
+    vector<Tensor4D> tmpBottom;
+    for (int bottomIndex = 0; bottomIndex < (*op)->GetBottomName().size(); ++bottomIndex)
+    {
+      if (this->tensor4DContainer.find((*op)->GetBottomName()[bottomIndex]) == this->tensor4DContainer.end())
+      {
+        this->tensor4DContainer[(*op)->GetBottomName()[bottomIndex]] = Tensor4D((*op)->GetBottomName()[bottomIndex],
+                                                                                (*op)->GetBottomShape()[bottomIndex]);
+      }
+      tmpBottom.push_back(this->tensor4DContainer[(*op)->GetBottomName()[bottomIndex]]);
+    }
+    (*op)->Backward(tmpBottom, tmpTop);
+  }
+}
+
+void Net::UpdateWeights(float learningRate)
+{
+  for (auto& op: this->operators)
+  {
+    op->UpdateWeights(learningRate);
+  }
 }
 
 void Net::PrintShapes()

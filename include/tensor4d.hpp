@@ -50,7 +50,8 @@ class Tensor4D
       gradients = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *
                                                    shape[Cd]], std::default_delete<float[]>());
     }
-    std::string GetName() { return name; }
+    std::string GetName() const { return name; }
+    void SetName(std::string _name) { name = _name; }
     std::vector<int> GetShape() const { return shape; }
     void SetShape(std::vector<int> _shape) { shape = _shape; }
     int GetSize() { return shape[Nd] * shape[Hd] * shape[Wd] * shape[Cd]; }

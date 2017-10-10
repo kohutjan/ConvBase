@@ -10,10 +10,11 @@ class Operator
     std::string GetType() const { return type; }
     std::vector<std::string> GetBottomName() const { return bottomName; }
     std::vector<std::string> GetTopName() const { return topName; }
-    std::vector<std::vector<int> > GetBottomShape() const { return bottomShape; }
-    std::vector<std::vector<int> > GetTopShape() const { return topShape; }
+    std::vector<std::vector<int>> GetBottomShape() const { return bottomShape; }
+    std::vector<std::vector<int>> GetTopShape() const { return topShape; }
     virtual void Forward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops) = 0;
     virtual void Backward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops) = 0;
+    virtual void UpdateWeights(float learningRate){};
     virtual void SetBottomShape(std::vector<std::vector<int>> _bottomShape){ bottomShape = _bottomShape; }
     virtual void ComputeTopShape() = 0;
     virtual ~Operator(){};
