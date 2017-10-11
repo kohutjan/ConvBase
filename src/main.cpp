@@ -1,12 +1,14 @@
 #include "net.hpp"
+#include "cifar10_loader.hpp"
 
 using namespace std;
 
 
 int main(int argc, char **argv)
 {
-  Net net;
-  net.Load(argv[1]);
-  net.Save(argv[2]);
+  CIFAR10Loader loader(argv[1], 127, 0.007874016);
+  loader.Load();
+  uint8_t u = 5;
+  cout << float(u) << endl;
   return 0;
 }
