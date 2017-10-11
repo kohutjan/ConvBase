@@ -1,13 +1,12 @@
 #ifndef CIFAR10_LOADER_HPP
 #define CIFAR10_LOADER_HPP
 
-#include <vector>
+#include "loader.hpp"
 #include <iostream>
-#include <utility>
 #include <fstream>
 #include <stdint.h>
 
-class CIFAR10Loader
+class CIFAR10Loader : public Loader
 {
   public:
     CIFAR10Loader(std::string _datasetFolder, float _mean, float _scale) :
@@ -23,8 +22,6 @@ class CIFAR10Loader
     std::vector<float> LoadImage(std::vector<uint8_t> &batch, int imageIndex);
     void ApplyMean(std::vector<float> &image);
     void ApplyScale(std::vector<float> &image);
-    std::pair<std::vector<float>, std::vector<std::vector<float>>> trainDataset;
-    std::pair<std::vector<float>, std::vector<std::vector<float>>> testDataset;
     ~CIFAR10Loader(){};
 
   private:

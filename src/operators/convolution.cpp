@@ -109,7 +109,12 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 
 void Convolution::UpdateWeights(float learningRate)
 {
-
+  float * kernelsDataVal = this->kernels.GetData();
+  float * kernelsGradientsVal = this->kernels.GetGradients();
+  for (int i = 0; i < this->kernels.GetSize(); ++i)
+  {
+    kernelsDataVal[i] -= kernelsGradientsVal[i] * learningRate; 
+  }
 }
 
 void Convolution::InitWeights()

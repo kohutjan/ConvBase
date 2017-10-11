@@ -42,12 +42,12 @@ class Net
     std::shared_ptr<Operator> LoadReshape(std::ifstream &modelStream);
     std::shared_ptr<Operator> LoadSoftmaxCrossEntropy(std::ifstream &modelStream);
     std::vector<std::shared_ptr<Operator>> operators;
+    std::map<std::string, std::vector<int>> inputs;
     ~Net(){};
   private:
     std::vector<std::vector<std::string>> LoadIO(std::ifstream &modelStream);
     void PrintIO(std::vector<std::vector<std::string>> IO);
     void LoadInput(std::ifstream &modelStream);
-    std::map<std::string, std::vector<int>> inputs;
     std::map<std::string, Tensor4D> tensor4DContainer;
 };
 

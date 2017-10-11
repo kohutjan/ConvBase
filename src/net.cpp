@@ -290,6 +290,13 @@ bool Net::SaveToStream(ofstream &modelStream)
       }
       modelStream << endl;
     }
+    if (op->GetType().compare(string("Reshape")) == 0)
+    {
+      Reshape * tmpReshape = dynamic_cast<Reshape*>(op.get());
+      modelStream << tmpReshape->GetShape()[0] << " ";
+      modelStream << tmpReshape->GetShape()[1] << " ";
+      modelStream << tmpReshape->GetShape()[2] << endl;
+    }
     modelStream << endl;
   }
   modelStream.close();

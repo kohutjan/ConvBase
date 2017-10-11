@@ -11,7 +11,8 @@ include_directories(${ConvBase_SRC_DIR})
 
 add_executable(ConvBase
                ${ConvBase_SRC_DIR}/main.cpp
-               ${ConvBase_SRC_DIR}/cifar10_loader.cpp
+               ${ConvBase_SRC_DIR}/solver.cpp
+               ${ConvBase_SRC_DIR}/loaders/cifar10_loader.cpp
                ${ConvBase_SRC_DIR}/net.cpp
                ${ConvBase_SRC_DIR}/operators/convolution.cpp
                ${ConvBase_SRC_DIR}/operators/pooling.cpp

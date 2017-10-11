@@ -1,14 +1,19 @@
-#include "net.hpp"
-#include "cifar10_loader.hpp"
+#include "solver.hpp"
+#include "loaders/cifar10_loader.hpp"
 
 using namespace std;
 
 
 int main(int argc, char **argv)
 {
-  CIFAR10Loader loader(argv[1], 127, 0.007874016);
+  CIFAR10Loader loader(argv[1], 127.0, 0.007874016);
   loader.Load();
-  uint8_t u = 5;
-  cout << float(u) << endl;
+  Net net;
+  net.Load(argv[2]);
+  net.Init();
+  net.InitWeights();
+  Solver solver(&loader, net);
+  solver.Solve(1000, 0.001);
+  net.Save(argv[3]);
   return 0;
 }

@@ -1,4 +1,4 @@
-#include "cifar10_loader.hpp"
+#include "loaders/cifar10_loader.hpp"
 
 using namespace std;
 
