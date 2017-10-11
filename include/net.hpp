@@ -13,13 +13,12 @@
 class Net
 {
   public:
-    Net()
-    {
-      inputs = std::map<std::string, std::vector<int>>();
-      tensor4DContainer = std::map<std::string, Tensor4D>();
-    }
     bool Load(std::string modelName);
+    bool LoadFromStream(std::ifstream &modelStream);
+    bool Save(std::string modelName);
+    bool SaveToStream(std::ofstream &modelStream);
     void Init();
+    void InitWeights();
     void PrintShapes();
     void Forward();
     void Backward();
@@ -37,7 +36,6 @@ class Net
         return tensor4DContainer[name];
       }
     }
-    bool LoadFromStream(std::ifstream &modelStream);
     std::shared_ptr<Operator> LoadConvolution(std::ifstream &modelStream);
     std::shared_ptr<Operator> LoadPooling(std::ifstream &modelStream);
     std::shared_ptr<Operator> LoadReLU(std::ifstream &modelStream);

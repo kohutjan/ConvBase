@@ -13,7 +13,10 @@
 class Tensor4D
 {
   public:
-    Tensor4D(){}
+    Tensor4D()
+    {
+      shape = {0, 0, 0, 0};
+    }
     Tensor4D(std::string _name, std::vector<int> _shape) : name(_name), shape(_shape)
     {
       data = std::shared_ptr<float>(new float[shape[Nd] * shape[Hd] * shape[Wd] *

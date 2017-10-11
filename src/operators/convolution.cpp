@@ -112,6 +112,31 @@ void Convolution::UpdateWeights(float learningRate)
 
 }
 
+void Convolution::InitWeights()
+{
+  float scale = sqrt(3.0 / (this->bottomShape[0][Hd] * this->bottomShape[0][Wd]
+                     * this->bottomShape[0][Cd]));
+  random_device rd;
+  mt19937 mt(rd());
+  uniform_real_distribution<float> dist(-scale, scale);
+  this->kernels = Tensor4D(this->numberOfKernels, this->kernelSize,
+                           this->kernelSize, this->bottomShape[0][Cd]);
+  float * kernelsVal = this->kernels.GetData();
+  for (int i = 0; i < this->kernels.GetSize(); ++i)
+  {
+    kernelsVal[i] = dist(mt);
+  }
+  if (this->bias)
+  {
+    this->biases = Tensor4D(1, 1, 1, this->numberOfKernels);
+    float * biasesVal = this->biases.GetData();
+    for (int i = 0; i < this->biases.GetSize(); ++i)
+    {
+      biasesVal[i] = 0.1;
+    }
+  }
+}
+
 void Convolution::ComputeTopShape()
 {
   this->topShape[0][Nd] = this->bottomShape[0][Nd];

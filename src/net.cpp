@@ -61,14 +61,9 @@ shared_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
 {
   vector<vector<string>> IO = this->LoadIO(modelStream);
   vector<int> parameters(5);
-  bool bias = true;
   for (auto& parameter: parameters)
   {
     modelStream >> parameter;
-  }
-  if (parameters[4] == 0)
-  {
-    bias = false;
   }
   Tensor4D kernels;
   Tensor4D biases;
@@ -99,10 +94,10 @@ shared_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
   cout << "type: Convolution | ";
   this->PrintIO(IO);
   cout << " | params: " << parameters[0] << "," << parameters[1] << ","
-       << parameters[2] << "," << parameters[3] << "," << bias << endl;
+       << parameters[2] << "," << parameters[3] << "," << parameters[4] << endl;
   return shared_ptr<Operator>(new Convolution(IO, parameters[0], parameters[1],
                                               parameters[2], parameters[3],
-                                              bias, kernels, biases));
+                                              parameters[4], kernels, biases));
 }
 
 shared_ptr<Operator> Net::LoadPooling(ifstream &modelStream)
@@ -174,6 +169,8 @@ bool Net::Load(string modelName)
 bool Net::LoadFromStream(ifstream &modelStream)
 {
   this->operators.clear();
+  this->inputs.clear();
+  this->tensor4DContainer.clear();
   cout << "Net params:" << endl;
   cout << "#############################################################" << endl;
   while (!modelStream.eof())
@@ -214,6 +211,88 @@ bool Net::LoadFromStream(ifstream &modelStream)
   modelStream.close();
   cout << "#############################################################" << endl;
   cout << endl;
+  return true;
+}
+
+bool Net::Save(string modelName)
+{
+  ofstream modelStream(modelName);
+  if (modelStream.is_open())
+  {
+    if(this->SaveToStream(modelStream))
+    {
+      cout << "Net was saved to " << modelName << endl;
+      return true;
+    }
+  }
+  else
+  {
+    cerr << "Unable to open model file." << endl;
+    return false;
+  }
+}
+
+bool Net::SaveToStream(ofstream &modelStream)
+{
+  modelStream << "Input" << endl;
+  modelStream << this->inputs.size() << endl;
+  for (auto& input: this->inputs)
+  {
+    modelStream << input.first << " ";
+    for (auto& val: input.second)
+    {
+      modelStream << val << " ";
+    }
+    modelStream << endl;
+  }
+  modelStream << endl;
+  for (auto& op: this->operators)
+  {
+    modelStream << op->GetType() << endl;
+    modelStream << op->GetBottomName().size() << " ";
+    for (auto& bottomName: op->GetBottomName())
+    {
+      modelStream << bottomName << " ";
+    }
+    modelStream << op->GetTopName().size() << " ";
+    for (auto& topName: op->GetTopName())
+    {
+      modelStream << topName << " ";
+
+    }
+    modelStream << endl;
+    if (op->GetType().compare(string("Convolution")) == 0)
+    {
+      Convolution * tmpConv = dynamic_cast<Convolution*>(op.get());
+      modelStream << tmpConv->GetNumberOfKernels() << " ";
+      modelStream << tmpConv->GetKernelSize() << " ";
+      modelStream << tmpConv->GetStride() << " ";
+      modelStream << tmpConv->GetPad() << " ";
+      modelStream << tmpConv->GetBias() << endl;
+      modelStream << tmpConv->GetKernels().GetShape()[Cd] << " ";
+      if (tmpConv->GetKernels().GetSize() > 0)
+      {
+        float * kernelsVal = tmpConv->GetKernels().GetData();
+        for (int i = 0; i < tmpConv->GetKernels().GetSize(); ++i)
+        {
+          modelStream << kernelsVal[i] << " ";
+        }
+      }
+      modelStream << endl;
+      modelStream << tmpConv->GetBiases().GetSize() << " ";
+      if (tmpConv->GetBiases().GetSize() > 0)
+      {
+        float * biasesVal = tmpConv->GetBiases().GetData();
+        for (int i = 0; i < tmpConv->GetBiases().GetSize(); ++i)
+        {
+          modelStream << biasesVal[i] << " ";
+        }
+      }
+      modelStream << endl;
+    }
+    modelStream << endl;
+  }
+  modelStream.close();
   return true;
 }
 
@@ -261,6 +340,14 @@ void Net::Init()
     }
   }
   this->PrintShapes();
+}
+
+void Net::InitWeights()
+{
+  for (auto& op: this->operators)
+  {
+    op->InitWeights();
+  }
 }
 
 void Net::Forward()
@@ -375,4 +462,5 @@ void Net::PrintShapes()
     cout << endl;
   }
   cout << "#############################################################" << endl;
+  cout << endl;
 }

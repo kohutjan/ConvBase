@@ -4,6 +4,8 @@
 #include "operator.hpp"
 #include "operators/im2col.hpp"
 #include <Eigen/Dense>
+#include <random>
+#include <math.h>
 
 class Convolution : public Operator
 {
@@ -18,11 +20,12 @@ class Convolution : public Operator
     void Backward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
     void ComputeTopShape();
     void UpdateWeights(float learningRate);
+    void InitWeights();
     int GetNumberOfKernels() const { return numberOfKernels; }
     int GetKernelSize() const { return kernelSize; }
     int GetStride() const { return stride; }
     int GetPad() const { return pad; }
-    bool GetBias() const { return bias; }
+    int GetBias() const { return bias; }
     Tensor4D GetKernels() const { return kernels; }
     Tensor4D GetBiases() const { return biases; }
     ~Convolution(){}
@@ -32,7 +35,7 @@ class Convolution : public Operator
     const int kernelSize;
     const int stride;
     const int pad;
-    const bool bias;
+    const int bias;
     Tensor4D kernels;
     Tensor4D biases;
     Im2Col im2col;
