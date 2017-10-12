@@ -1,4 +1,5 @@
 #include "operators/softmax_cross_entropy.hpp"
+#include <iostream>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ void SoftmaxCrossEntropy::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top
     for (int i = 0; i < topSoftmaxImageSize; ++i)
     {
       bottomGradientsVal[n * topSoftmaxImageSize + i] = softmaxTopDataVal[n * topSoftmaxImageSize + i];
-      if (i == topLabelVal[n])
+      if (i == int(topLabelVal[n]))
       {
         bottomGradientsVal[n * topSoftmaxImageSize + i] -= 1.0;
       }

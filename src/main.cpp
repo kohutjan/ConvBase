@@ -13,7 +13,7 @@ int main(int argc, char **argv)
   net.Init();
   net.InitWeights();
   Solver solver(&loader, net);
-  solver.Solve(1000, 0.001);
+  solver.Solve(1000, 0.01);
   net.Save(argv[3]);
   return 0;
 }

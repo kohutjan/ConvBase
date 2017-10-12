@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     storeTensor4D(testBackward(argv[2] + string("gradients_input.txt"), net),
                   argv[3] + string("backward_convbase_output.txt"), true);
     Convolution * conv = dynamic_cast<Convolution*>(net.operators[0].get());
-    storeTensor4D(conv->GetKernels(),  argv[3] + string("weights_convbase_output.txt"), true);
+    storeTensor4D(conv->GetKernels(), argv[3] + string("weights_convbase_output.txt"), true);
   }
 
   return 0;

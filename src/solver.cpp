@@ -9,6 +9,7 @@ void Solver::Solve(int numberOfIterations, float learningRate)
   {
     pair<Tensor4D, Tensor4D> batch = this->GetRandomTrainBatch();
     this->net.AddTensor4DToContainer(this->net.inputs.begin()->first, batch.second);
+    this->net.AddTensor4DToContainer("loss", batch.first);
     this->net.Forward();
     Tensor4D top = this->net.GetTensor4DFromContainer("top");
     float * labelVal = top.GetData();
@@ -29,11 +30,13 @@ void Solver::Solve(int numberOfIterations, float learningRate)
         rightGuess++;
       }
     }
-    if (n % 100 == 0)
+    if (n != 0)
     {
-      cout << "Ieration " << n << " | train accuracy: " << float(rightGuess) / float(n);
+      if (n % 50 == 0)
+      {
+        cout << "Ieration " << n << " | train accuracy: " << float(rightGuess) / float(n * this->net.inputs.begin()->second[Nd]) << endl;;
+      }
     }
-    this->net.AddTensor4DToContainer("loss", batch.first);
     this->net.Backward();
     this->net.UpdateWeights(learningRate);
   }

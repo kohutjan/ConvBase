@@ -29,7 +29,6 @@ void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
                           eigenKernels.cols());
 
   eigenTopData = eigenColData * eigenKernels;
-
   /*
   cout << eigenCol << endl;
   cout << endl;
@@ -113,7 +112,7 @@ void Convolution::UpdateWeights(float learningRate)
   float * kernelsGradientsVal = this->kernels.GetGradients();
   for (int i = 0; i < this->kernels.GetSize(); ++i)
   {
-    kernelsDataVal[i] -= kernelsGradientsVal[i] * learningRate; 
+    kernelsDataVal[i] -= kernelsGradientsVal[i] * learningRate;
   }
 }
 
