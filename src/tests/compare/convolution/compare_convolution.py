@@ -71,7 +71,7 @@ def main():
         else:
             print("GPU mode set.")
 
-    errorSum = np.zeros(3)
+    errorSum = np.zeros(4)
 
     for i in range(args.tests_number):
         tmpNetProto = tempfile.NamedTemporaryFile()
@@ -117,6 +117,8 @@ def main():
         print ("Mean backward error: {}".format(meanError[1]))
     if args.weights:
         print ("Mean weights gradients error: {}".format(meanError[2]))
+    if args.bias:
+        print ("Mean biases gradients error: {}".format(meanError[3]))
     print ("#############################################################")
 
 
@@ -229,9 +231,10 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
         convbaseWeights.wait()
 
 
-    forwardError = 0;
-    backwardError = 0;
-    weightsGradientsError = 0;
+    forwardError = 0
+    backwardError = 0
+    weightsGradientsError = 0
+    biasesGradientsError = 0
 
     sys.stdout.write("\n")
 
@@ -283,8 +286,23 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
         sys.stdout.write("Weights gradients ")
         weightsGradientsError = printError(verbose, error, code)
 
+        if biases is not None:
+            try:
+                os.remove(outputPreffix + "biases_caffe_output.txt")
+            except OSError:
+                pass
+            outputFile = open(outputPreffix + "biases_caffe_output.txt", "w")
+            for value in net.params[topName][1].diff:
+                outputFile.write("{}\n".format(value))
+            outputFile.close()
 
-    return np.asarray((forwardError, backwardError, weightsGradientsError))
+            error, code = compareOutputs(outputPreffix + "biases_caffe_output.txt",
+                                         outputPreffix + "biases_convbase_output.txt")
+            sys.stdout.write("Biases gradients ")
+            biasesGradientsError = printError(verbose, error, code)
+
+
+    return np.asarray((forwardError, backwardError, weightsGradientsError, biasesGradientsError))
 
 
 def printError(verbose, error, code):

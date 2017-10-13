@@ -17,7 +17,7 @@ void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
              Dynamic,
              Dynamic,
              ColMajor>>
-             eigenKernels(this->kernels.GetData(), this->kernelSize *
+             eigenKernelsData(this->kernels.GetData(), this->kernelSize *
                           this->kernelSize * this->kernels.GetShape()[Cd],
                           this->numberOfKernels);
 
@@ -26,29 +26,14 @@ void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
              Dynamic,
              RowMajor>>
              eigenTopData(top[0].GetData(), eigenColData.rows(),
-                          eigenKernels.cols());
+                          eigenKernelsData.cols());
 
-  eigenTopData = eigenColData * eigenKernels;
-  /*
-  cout << eigenCol << endl;
-  cout << endl;
-  cout << eigenKernels << endl;
-  cout << endl;
-  cout << eigenOutput << endl;
-  */
+  eigenTopData = eigenColData * eigenKernelsData;
 
   if (this->bias)
   {
-    float * outputPixel = top[0].GetData();
-    float * biasesVal = this->biases.GetData();
-    for (int i = 0; i < this->topShape[0][Nd] * this->topShape[0][Hd] *
-         this->topShape[0][Wd]; ++i)
-    {
-      for (int c = 0; c < this->topShape[0][Cd]; ++c)
-      {
-        outputPixel[i * this->topShape[0][Cd] + c] += biasesVal[c];
-      }
-    }
+    Map<RowVectorXf> eigenBiasesData(this->biases.GetData(), this->biases.GetSize());
+    eigenTopData = eigenTopData.array().rowwise() + eigenBiasesData.array();
   }
 }
 
@@ -65,9 +50,9 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
              Dynamic,
              Dynamic,
              RowMajor>>
-             eigenTransposeKernels(this->kernels.GetData(),
-                                   this->numberOfKernels, this->kernelSize *
-                                   this->kernelSize * this->kernels.GetShape()[Cd]);
+             eigenTransposeKernelsData(this->kernels.GetData(),
+                                       this->numberOfKernels, this->kernelSize *
+                                       this->kernelSize * this->kernels.GetShape()[Cd]);
 
   Map<Matrix<float,
              Dynamic,
@@ -76,15 +61,7 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
              eigenColGradients(this->col.GetGradients(), this->col.GetShape()[Hd],
                                this->col.GetShape()[Wd]);
 
-  eigenColGradients = eigenTopGradients * eigenTransposeKernels;
-
-  /*
-  cout << eigenTopGradients << endl;
-  cout << endl;
-  cout << eigenTransposeKernels << endl;
-  cout << endl;
-  cout << eigenColGradients << endl;
-  */
+  eigenColGradients = eigenTopGradients * eigenTransposeKernelsData;
 
   this->im2col.Backward(bottom, vector<Tensor4D>(1, this->col));
 
@@ -104,6 +81,12 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
                                    this->numberOfKernels);
 
   eigenKernelsGradients = eigenTransposeColData * eigenTopGradients;
+
+  if (this->bias)
+  {
+    Map<RowVectorXf> eigenBiasesGradients(this->biases.GetGradients(), this->biases.GetSize());
+    eigenBiasesGradients = eigenTopGradients.colwise().sum();
+  }
 }
 
 void Convolution::UpdateWeights(float learningRate)
@@ -113,6 +96,15 @@ void Convolution::UpdateWeights(float learningRate)
   for (int i = 0; i < this->kernels.GetSize(); ++i)
   {
     kernelsDataVal[i] -= kernelsGradientsVal[i] * learningRate;
+  }
+  if (this->bias)
+  {
+    float * biasesDataVal = this->biases.GetData();
+    float * biasesGradientsVal = this->biases.GetGradients();
+    for (int i = 0; i < this->biases.GetSize(); ++i)
+    {
+      biasesDataVal[i] -= biasesGradientsVal[i] * learningRate;
+    }
   }
 }
 
