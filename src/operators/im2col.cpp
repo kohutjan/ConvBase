@@ -55,7 +55,7 @@ void Im2Col::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
        this->bottomShape[0][Hd] * this->bottomShape[0][Wd] *
        this->bottomShape[0][Cd]), 0.0);
   float * topGradientsVal = top[0].GetGradients();
-  for (int i = 0; i < this->col2imMap.size(); ++i)
+  for (size_t i = 0; i < this->col2imMap.size(); ++i)
   {
     if (this->col2imMap[i] != PAD)
     {

@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(ConvBase)
 
-set (CMAKE_CXX_FLAGS "-g -std=gnu++11 ${CMAKE_CXX_FLAGS}")
 set(ConvBase_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(ConvBase_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 
@@ -31,3 +30,7 @@ add_executable(compute_convolution
                ${ConvBase_SRC_DIR}/operators/reshape.cpp
                ${ConvBase_SRC_DIR}/operators/im2col.cpp
                ${ConvBase_SRC_DIR}/operators/softmax_cross_entropy.cpp)
+
+
+
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=gnu++11 -Wall -Wextra -pedantic")

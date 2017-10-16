@@ -24,7 +24,7 @@ void SoftmaxCrossEntropy::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
     {
       float softmaxOutput = exp(bottomDataVal[n * bottomImageSize + i]) / expSum[n];
       softmaxTopDataVal[n * bottomImageSize + i] = softmaxOutput;
-      if (i == topLabelVal[n])
+      if (i == static_cast<int>(topLabelVal[n]))
       {
         topDataVal[n] = -log(softmaxOutput);
       }
@@ -43,7 +43,7 @@ void SoftmaxCrossEntropy::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top
     for (int i = 0; i < topSoftmaxImageSize; ++i)
     {
       bottomGradientsVal[n * topSoftmaxImageSize + i] = softmaxTopDataVal[n * topSoftmaxImageSize + i];
-      if (i == int(topLabelVal[n]))
+      if (i == static_cast<int>(topLabelVal[n]))
       {
         bottomGradientsVal[n * topSoftmaxImageSize + i] -= 1.0;
       }

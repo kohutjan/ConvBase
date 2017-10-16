@@ -95,7 +95,7 @@ void Convolution::UpdateWeights(float learningRate)
   float * kernelsGradientsVal = this->kernels.GetGradients();
   for (int i = 0; i < this->kernels.GetSize(); ++i)
   {
-    kernelsDataVal[i] -= kernelsGradientsVal[i] * learningRate;
+    kernelsDataVal[i] -= kernelsGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate;
   }
   if (this->bias)
   {
@@ -103,7 +103,7 @@ void Convolution::UpdateWeights(float learningRate)
     float * biasesGradientsVal = this->biases.GetGradients();
     for (int i = 0; i < this->biases.GetSize(); ++i)
     {
-      biasesDataVal[i] -= biasesGradientsVal[i] * learningRate;
+      biasesDataVal[i] -= biasesGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate;
     }
   }
 }
@@ -126,10 +126,7 @@ void Convolution::InitWeights()
   {
     this->biases = Tensor4D(1, 1, 1, this->numberOfKernels);
     float * biasesVal = this->biases.GetData();
-    for (int i = 0; i < this->biases.GetSize(); ++i)
-    {
-      biasesVal[i] = 0.1;
-    }
+    fill(biasesVal, biasesVal + this->biases.GetSize(), 0.0);
   }
 }
 

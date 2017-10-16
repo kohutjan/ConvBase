@@ -27,14 +27,24 @@ class Net
     void AddTensor4DToContainer(std::string name, Tensor4D tensor)
     {
       tensor.SetName(name);
-      tensor4DContainer[name] = tensor;
+      auto it = tensor4DContainer.find(name);
+      if (it != tensor4DContainer.end())
+      {
+        it->second = tensor;
+      }
+      else
+      {
+        tensor4DContainer[name] = tensor;
+      }
     }
     Tensor4D GetTensor4DFromContainer(std::string name)
     {
+      Tensor4D tensor;
       if (tensor4DContainer.find(name) != tensor4DContainer.end())
       {
-        return tensor4DContainer[name];
+        tensor = tensor4DContainer[name];
       }
+      return tensor;
     }
     std::shared_ptr<Operator> LoadConvolution(std::ifstream &modelStream);
     std::shared_ptr<Operator> LoadPooling(std::ifstream &modelStream);

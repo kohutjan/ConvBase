@@ -103,17 +103,15 @@ shared_ptr<Operator> Net::LoadConvolution(ifstream& modelStream)
 shared_ptr<Operator> Net::LoadPooling(ifstream &modelStream)
 {
   vector<vector<string>> IO = this->LoadIO(modelStream);
-  vector<int> parameters(3);
+  vector<int> parameters(2);
   for (auto& parameter: parameters)
   {
     modelStream >> parameter;
   }
   cout << "type: Pooling | ";
   this->PrintIO(IO);
-  cout << " | params: " << parameters[0] << ',' << parameters[1] << ","
-       << parameters[2] << endl;
-  return shared_ptr<Operator>(new Pooling(IO, parameters[0], parameters[1],
-                                          parameters[2]));
+  cout << " | params: " << parameters[0] << ',' << parameters[1] << endl;
+  return shared_ptr<Operator>(new Pooling(IO, parameters[0], parameters[1]));
 }
 
 shared_ptr<Operator> Net::LoadReLU(ifstream &modelStream)
@@ -224,6 +222,10 @@ bool Net::Save(string modelName)
       cout << "Net was saved to " << modelName << endl;
       return true;
     }
+    else
+    {
+      return false;
+    }
   }
   else
   {
@@ -324,14 +326,14 @@ void Net::Init()
     }
   }
 
-  for (int bottomIndex = numberOfInputsOperators; bottomIndex < this->operators.size(); ++bottomIndex)
+  for (size_t bottomIndex = numberOfInputsOperators; bottomIndex < this->operators.size(); ++bottomIndex)
   {
     vector<vector<int>> tmpBottomShape;
-    for (int topIndex = 0; topIndex < bottomIndex; ++topIndex)
+    for (size_t topIndex = 0; topIndex < bottomIndex; ++topIndex)
     {
       for (auto& bottom: this->operators[bottomIndex]->GetBottomName())
       {
-        for (int t = 0; t < this->operators[topIndex]->GetTopName().size(); ++t)
+        for (size_t t = 0; t < this->operators[topIndex]->GetTopName().size(); ++t)
         {
           if (bottom.compare(this->operators[topIndex]->GetTopName()[t]) == 0)
           {
@@ -370,7 +372,7 @@ void Net::Forward()
       }
     }
     vector<Tensor4D> tmpTop;
-    for (int topIndex = 0; topIndex < op->GetTopName().size(); ++topIndex)
+    for (size_t topIndex = 0; topIndex < op->GetTopName().size(); ++topIndex)
     {
       if (this->tensor4DContainer.find(op->GetTopName()[topIndex]) == this->tensor4DContainer.end())
       {
@@ -396,7 +398,7 @@ void Net::Backward()
       }
     }
     vector<Tensor4D> tmpBottom;
-    for (int bottomIndex = 0; bottomIndex < (*op)->GetBottomName().size(); ++bottomIndex)
+    for (size_t bottomIndex = 0; bottomIndex < (*op)->GetBottomName().size(); ++bottomIndex)
     {
       if (this->tensor4DContainer.find((*op)->GetBottomName()[bottomIndex]) == this->tensor4DContainer.end())
       {
@@ -425,10 +427,10 @@ void Net::PrintShapes()
   {
     cout << "type: " << op->GetType() << " | ";
     cout << "bottom: ";
-    for (int bottomIndex = 0; bottomIndex < op->GetBottomName().size(); ++bottomIndex)
+    for (size_t bottomIndex = 0; bottomIndex < op->GetBottomName().size(); ++bottomIndex)
     {
       cout << op->GetBottomName()[bottomIndex] << "(";
-      for (int i = 0; i < op->GetBottomShape()[bottomIndex].size(); ++i)
+      for (size_t i = 0; i < op->GetBottomShape()[bottomIndex].size(); ++i)
       {
         cout << op->GetBottomShape()[bottomIndex][i];
         if (i != op->GetBottomShape()[bottomIndex].size() - 1)
@@ -446,10 +448,10 @@ void Net::PrintShapes()
       }
     }
     cout << " | top: ";
-    for (int topIndex = 0; topIndex < op->GetBottomName().size(); ++topIndex)
+    for (size_t topIndex = 0; topIndex < op->GetBottomName().size(); ++topIndex)
     {
       cout << op->GetTopName()[topIndex] << "(";
-      for (int i = 0; i < op->GetTopShape()[topIndex].size(); ++i)
+      for (size_t i = 0; i < op->GetTopShape()[topIndex].size(); ++i)
       {
         cout << op->GetTopShape()[topIndex][i];
         if (i != op->GetTopShape()[topIndex].size() - 1)

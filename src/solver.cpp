@@ -4,27 +4,63 @@ using namespace std;
 
 void Solver::Solve()
 {
-  int rightGuess = 0;
-  for (int n = 0; n < numberOfIterations; ++n)
+  int rightGuesses = 0;
+  for (int n = 0; n < this->trainIterations; ++n)
   {
     pair<Tensor4D, Tensor4D> batch = this->GetRandomTrainBatch();
-    Tensor4D top = this->net.
+    this->net.AddTensor4DToContainer(this->outputTopName, batch.first);
     this->net.AddTensor4DToContainer(this->net.inputs.begin()->first, batch.second);
     this->net.Forward();
-    rightGuesses += this->GetRightGuesses(batch, top);
-    this->PrintAccuracy(n, interval, rightGuesses);
+    rightGuesses += this->GetRightGuesses(batch, this->net.GetTensor4DFromContainer(this->outputBottomName));
+    this->PrintAccuracy("Train", n, this->displayInterval, rightGuesses);
     this->net.Backward();
-    this->net.UpdateWeights(learningRate);
+    this->net.UpdateWeights(this->learningRate);
+    this->TestNet(n);
+  }
+  cout << endl;
+  cout << "#############################################################" << endl;
+  this->PrintAccuracy("Train", this->trainIterations, this->trainIterations, rightGuesses);
+  cout << "#############################################################" << endl;
+  cout << endl;
+}
+
+void Solver::TestNet(int n)
+{
+  if (n != 0)
+  {
+    if (n % this->testInterval == 0)
+    {
+      int rightGuesses = 0;
+      for (int i = 0; i < this->testIterations; ++i)
+      {
+        vector<int> indexes(this->net.inputs.begin()->second[Nd]);
+        for (int j = 0; j < static_cast<int>(indexes.size()); ++j)
+        {
+          indexes[j] = (i * indexes.size() + j) % this->loader->testDataset.first.size();
+        }
+        pair<Tensor4D, Tensor4D> batch = this->GetBatch("test", indexes);
+        this->net.AddTensor4DToContainer(this->outputTopName, batch.first);
+        this->net.AddTensor4DToContainer(this->net.inputs.begin()->first, batch.second);
+        this->net.Forward();
+        rightGuesses += this->GetRightGuesses(batch, this->net.GetTensor4DFromContainer(this->outputBottomName));
+      }
+      cout << endl;
+      cout << "#############################################################" << endl;
+      this->PrintAccuracy("Test", this->testIterations, this->testIterations, rightGuesses);
+      cout << "#############################################################" << endl;
+      cout << endl;
+    }
   }
 }
 
-void Solver::PrintAccuracy(int n, int interval, int rightGuesses)
+void Solver::PrintAccuracy(string type, int n, int interval, int rightGuesses)
 {
   if (n != 0)
   {
     if (n % interval == 0)
     {
-      cout << "Iteration " << n << " | train accuracy: " << float(rightGuesses)
+      cout << n << " iterations | ";
+      cout << type << " accuracy: " << float(rightGuesses)
            / float(n * this->net.inputs.begin()->second[Nd]) << endl;
     }
   }
@@ -58,11 +94,11 @@ pair<Tensor4D, Tensor4D> Solver::GetRandomTrainBatch()
 {
   random_device rd;
   mt19937 mt(rd());
-  uniform_int_distribution<int> indexDist(0, 50000);
+  uniform_int_distribution<int> indexDist(0, this->loader->trainDataset.first.size() - 1);
   vector<int> randomIndexes(this->net.inputs.begin()->second[Nd]);
-  for (int i = 0; i < randomIndexes.size(); ++i)
+  for (auto& randomIndex: randomIndexes)
   {
-    randomIndexes[i] = indexDist(mt);
+    randomIndex = indexDist(mt);
   }
   return this->GetBatch("train", randomIndexes);
 }
@@ -74,7 +110,7 @@ pair<Tensor4D, Tensor4D> Solver::GetBatch(string datasetType, vector<int> indexe
   Tensor4D data(inputShape[Nd], inputShape[Hd], inputShape[Wd], inputShape[Cd]);
   float * labelsVal = labels.GetGradients();
   float * dataVal = data.GetData();
-  for (int i = 0; i < indexes.size(); ++i)
+  for (int i = 0; i < static_cast<int>(indexes.size()); ++i)
   {
     vector<float> randomImage;
     if (datasetType == string("train"))
