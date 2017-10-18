@@ -21,7 +21,7 @@ add_executable(ConvBase
                ${ConvBase_SRC_DIR}/operators/softmax_cross_entropy.cpp)
 
 
-add_executable(compute_convolution
+add_executable(compute_net
                ${ConvBase_SRC_DIR}/tests/tensor4d_file_manager.cpp
                ${ConvBase_SRC_DIR}/tests/compute_net.cpp
                ${ConvBase_SRC_DIR}/net.cpp
