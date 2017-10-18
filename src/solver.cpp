@@ -12,14 +12,52 @@ void Solver::Solve()
     this->net.AddTensor4DToContainer(this->net.inputs.begin()->first, batch.second);
     this->net.Forward();
     rightGuesses += this->GetRightGuesses(batch, this->net.GetTensor4DFromContainer(this->outputBottomName));
-    this->PrintAccuracy("Train", n, this->displayInterval, rightGuesses);
+    this->PrintAccuracy("Train", n, this->displayInterval, &rightGuesses);
     this->net.Backward();
+    /*
+    Tensor4D top = this->net.GetTensor4DFromContainer("conv4");
+    Tensor4D bottom = this->net.GetTensor4DFromContainer("relu3");
+    float * topVal = top.GetData();
+    float * bottomVal = bottom.GetGradients();
+    cout << "########## DATA ##########" << endl;
+    int topImageSize = top.GetSize() / top.GetShape()[Nd];
+    for (int m = 0; m < top.GetShape()[Nd]; ++m)
+    {
+      for (int i = 0; i < topImageSize; ++i)
+      {
+        if (i != 0 && i % top.GetShape()[Cd] == 0)
+        {
+            cout << endl;
+            break;
+        }
+        cout << topVal[m * topImageSize + i] << " ";
+      }
+    }
+
+    cout << endl;
+    cout << endl;
+    cout << "########## GRADIENTS ##########" << endl;
+    int bottomImageSize = bottom.GetSize() / bottom.GetShape()[Nd];
+    for (int m = 0; m < bottom.GetShape()[Nd]; ++m)
+    {
+      for (int i = 0; i < bottomImageSize; ++i)
+      {
+        if (i != 0 && i % bottom.GetShape()[Cd] == 0)
+        {
+            cout << endl;
+            break;
+        }
+        cout << bottomVal[m * bottomImageSize + i] << " ";
+      }
+    }
+    cout << endl << endl << endl;
+    */
     this->net.UpdateWeights(this->learningRate);
     this->TestNet(n);
   }
   cout << endl;
   cout << "#############################################################" << endl;
-  this->PrintAccuracy("Train", this->trainIterations, this->trainIterations, rightGuesses);
+  this->PrintAccuracy("Train", this->trainIterations, this->displayInterval, &rightGuesses);
   cout << "#############################################################" << endl;
   cout << endl;
 }
@@ -28,7 +66,7 @@ void Solver::TestNet(int n)
 {
   if (n != 0)
   {
-    if (n % this->testInterval == 0)
+    if (n % (this->testInterval - 1) == 0)
     {
       int rightGuesses = 0;
       for (int i = 0; i < this->testIterations; ++i)
@@ -46,22 +84,23 @@ void Solver::TestNet(int n)
       }
       cout << endl;
       cout << "#############################################################" << endl;
-      this->PrintAccuracy("Test", this->testIterations, this->testIterations, rightGuesses);
+      this->PrintAccuracy("Test", this->testIterations, this->testIterations, &rightGuesses);
       cout << "#############################################################" << endl;
       cout << endl;
     }
   }
 }
 
-void Solver::PrintAccuracy(string type, int n, int interval, int rightGuesses)
+void Solver::PrintAccuracy(string type, int n, int interval, int * rightGuesses)
 {
   if (n != 0)
   {
-    if (n % interval == 0)
+    if (n % (interval - 1) == 0)
     {
       cout << n << " iterations | ";
-      cout << type << " accuracy: " << float(rightGuesses)
-           / float(n * this->net.inputs.begin()->second[Nd]) << endl;
+      cout << type << " accuracy: " << float(*rightGuesses)
+           / float(interval * this->net.inputs.begin()->second[Nd]) << endl;
+      *rightGuesses = 0;
     }
   }
 }
@@ -82,7 +121,7 @@ int Solver::GetRightGuesses(pair<Tensor4D, Tensor4D> batch, Tensor4D top)
         topLabel = i;
       }
     }
-    if (topLabel == int(batch.first.GetGradients()[j]))
+    if (topLabel == static_cast<int>(batch.first.GetGradients()[j]))
     {
       rightGuess++;
     }
@@ -96,9 +135,9 @@ pair<Tensor4D, Tensor4D> Solver::GetRandomTrainBatch()
   mt19937 mt(rd());
   uniform_int_distribution<int> indexDist(0, this->loader->trainDataset.first.size() - 1);
   vector<int> randomIndexes(this->net.inputs.begin()->second[Nd]);
-  for (auto& randomIndex: randomIndexes)
+  for (size_t i = 0; i < randomIndexes.size(); ++i)
   {
-    randomIndex = indexDist(mt);
+    randomIndexes[i] = indexDist(mt);
   }
   return this->GetBatch("train", randomIndexes);
 }

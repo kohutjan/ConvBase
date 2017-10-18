@@ -23,7 +23,7 @@ class Solver
       }
     }
     void TestNet(int n);
-    void PrintAccuracy(std::string type, int n, int interval, int rightGuesses);
+    void PrintAccuracy(std::string type, int n, int interval, int * rightGuesses);
     int GetRightGuesses(std::pair<Tensor4D, Tensor4D> batch, Tensor4D top);
     std::pair<Tensor4D, Tensor4D> GetRandomTrainBatch();
     std::pair<Tensor4D, Tensor4D> GetBatch(std::string datasetType,

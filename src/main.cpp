@@ -11,9 +11,10 @@ int main(int argc, char **argv)
   Net net;
   net.Load(argv[2]);
   net.Init();
-  net.InitWeights();
-  Solver solver(&loader, net, 0.1, 300, 100, 100, 50);
+  //net.InitWeights();
+  Solver solver(&loader, net, 0.1, 2700, 100, 100, 5);
+  //solver.TestNet(100);
   solver.Solve();
-  net.Save(argv[3]);
+  //net.Save(argv[3]);
   return 0;
 }

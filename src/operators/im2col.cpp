@@ -8,7 +8,7 @@ void Im2Col::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
   float * topDataVal = top[0].GetData();
   int topOffset = 0;
-
+  
   for (int n = 0; n < this->bottomShape[0][Nd]; ++n)
   {
     for (int h = 0; h <= this->bottomShape[0][Hd] + 2 * this->pad - this->kernelSize; h += this->stride)

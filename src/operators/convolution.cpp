@@ -53,6 +53,7 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
              eigenTransposeKernelsData(this->kernels.GetData(),
                                        this->numberOfKernels, this->kernelSize *
                                        this->kernelSize * this->kernels.GetShape()[Cd]);
+  setNbThreads(0);
 
   Map<Matrix<float,
              Dynamic,
@@ -110,13 +111,13 @@ void Convolution::UpdateWeights(float learningRate)
 
 void Convolution::InitWeights()
 {
-  float scale = sqrt(3.0 / (this->bottomShape[0][Hd] * this->bottomShape[0][Wd]
-                     * this->bottomShape[0][Cd]));
+  this->kernels = Tensor4D(this->numberOfKernels, this->kernelSize,
+                           this->kernelSize, this->bottomShape[0][Cd]);
+  float scale = sqrt(3.0 / (this->kernels.GetShape()[Hd] * this->kernels.GetShape()[Wd]
+                            * this->kernels.GetShape()[Cd]));
   random_device rd;
   mt19937 mt(rd());
   uniform_real_distribution<float> dist(-scale, scale);
-  this->kernels = Tensor4D(this->numberOfKernels, this->kernelSize,
-                           this->kernelSize, this->bottomShape[0][Cd]);
   float * kernelsVal = this->kernels.GetData();
   for (int i = 0; i < this->kernels.GetSize(); ++i)
   {
