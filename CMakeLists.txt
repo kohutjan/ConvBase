@@ -22,7 +22,8 @@ add_executable(ConvBase
 
 
 add_executable(compute_convolution
-               ${ConvBase_SRC_DIR}/tests/compare/convolution/compute_convolution.cpp
+               ${ConvBase_SRC_DIR}/tests/tensor4d_file_manager.cpp
+               ${ConvBase_SRC_DIR}/tests/compute_net.cpp
                ${ConvBase_SRC_DIR}/net.cpp
                ${ConvBase_SRC_DIR}/operators/convolution.cpp
                ${ConvBase_SRC_DIR}/operators/pooling.cpp

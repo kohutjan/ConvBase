@@ -12,7 +12,7 @@ import tempfile
 def parse_args():
     print( ' '.join(sys.argv))
 
-    parser = argparse.ArgumentParser(epilog="Compare convolution. \
+    parser = argparse.ArgumentParser(epilog="Compare pooling. \
             Error is mean(abs(DifferenceOfOutputs))/mean(abs(ExpectedOutput)).")
 
     parser.add_argument('-tn', '--tests-number',
@@ -22,20 +22,14 @@ def parse_args():
     parser.add_argument('-e', '--convbase-executable',
                         required=True,
                         help="compute_convolution exacutable")
-    parser.add_argument('-s', '--bias',
-                        action='store_true',
-                        help='Use bias.')
     parser.add_argument('-f', '--forward',
                         action='store_true',
                         help='Compare forward pass.')
     parser.add_argument('-b', '--backward',
                         action='store_true',
                         help='Compare backward pass.')
-    parser.add_argument('-w', '--weights',
-                        action='store_true',
-                        help='Compare weights gradients.')
     parser.add_argument('-p', '--params',
-                        help='Syntax: Input shape: N,H,W,C  Conv params: kernelNumber,kernelSize,stride,pad')
+                        help="Syntax: Input shape: N,H,W,C  Pooling params: kernelSize,stride")
     parser.add_argument('-c', '--cpu',
                         action='store_true',
                         help='Set cpu mode (default gpu mode)')
@@ -44,7 +38,7 @@ def parse_args():
 
     args = parser.parse_args()
 
-    if not (args.forward or args.backward or args.weights):
+    if not (args.forward or args.backward):
         sys.stdout.write("No tests to be done.\n")
         sys.exit(1)
 
@@ -71,11 +65,11 @@ def main():
         else:
             print("GPU mode set.")
 
-    errorSum = np.zeros(4)
+    errorSum = np.zeros(2)
 
     for i in range(args.tests_number):
         tmpNetProto = tempfile.NamedTemporaryFile()
-        tmpNetProto.write(createConvolutionNet(args.params, args.bias))
+        tmpNetProto.write(createPoolingNet(args.params))
         tmpNetProto.flush()
         net = caffe.Net(tmpNetProto.name, caffe.TEST)
         deploy = caffe_pb2.NetParameter()
@@ -83,29 +77,24 @@ def main():
         tmpNetProto.close()
         sys.stdout.write("{}. ".format(i + 1))
         if not args.verbose:
-            sys.stdout.write("Bottom shape: {},{},{},{} ".format(net.blobs['data'].data.shape[0],
-                                                                 net.blobs['data'].data.shape[2],
-                                                                 net.blobs['data'].data.shape[3],
-                                                                 net.blobs['data'].data.shape[1]))
-            convParams = deploy.layer[1].convolution_param
-            sys.stdout.write("Conv params: {},{},{},{} ".format(convParams.num_output,
-                                                                convParams.kernel_size[0],
-                                                                convParams.stride[0],
-                                                                convParams.pad[0]))
-            sys.stdout.write("Top shape: {},{},{}".format(net.blobs['convolution'].data.shape[2],
-                                                             net.blobs['convolution'].data.shape[3],
-                                                             net.blobs['convolution'].data.shape[1]))
+            sys.stdout.write("Input shape: {},{},{} ".format(net.blobs['data'].data.shape[2],
+                                                             net.blobs['data'].data.shape[3],
+                                                             net.blobs['data'].data.shape[1]))
+            poolingParams = deploy.layer[1].pooling_param
+            sys.stdout.write("Pooling params: {},{} ".format(poolingParams.kernel_size,
+                                                             poolingParams.stride))
+            sys.stdout.write("Output shape: {},{},{} | ".format(net.blobs['pooling'].data.shape[2],
+                                                                net.blobs['pooling'].data.shape[3],
+                                                                net.blobs['pooling'].data.shape[1]))
 
         net.blobs['data'].data[...] = np.random.random_sample(net.blobs['data'].data.shape) - 0.5
-        net.blobs['convolution'].diff[...] = np.random.random_sample(net.blobs['convolution'].diff.shape) - 0.5
-        net.params['convolution'][0].data[...] = np.random.random_sample(net.params['convolution'][0].data.shape) - 0.5
-        if args.bias:
-            net.params['convolution'][1].data[...] = np.random.random_sample(net.params['convolution'][1].data.shape) * 0.25 - 0.125
+        net.blobs['pooling'].diff[...] = np.random.random_sample(net.blobs['pooling'].diff.shape) - 0.5
 
-        errorSum += compareConvolution(net, deploy, args.forward, args.backward,
-                                       args.weights, args.convbase_executable,
-                                       outputPreffix="convolution_",
-                                       verbose=args.verbose)
+
+        errorSum += comparePooling(net, deploy, args.forward, args.backward,
+                                   args.convbase_executable,
+                                   outputPreffix="pooling_",
+                                   verbose=args.verbose)
 
     meanError = errorSum / args.tests_number
 
@@ -115,15 +104,11 @@ def main():
         print ("Mean forward error: {}".format(meanError[0]))
     if args.backward:
         print ("Mean backward error: {}".format(meanError[1]))
-    if args.weights:
-        print ("Mean weights gradients error: {}".format(meanError[2]))
-    if args.bias:
-        print ("Mean biases gradients error: {}".format(meanError[3]))
     print ("#############################################################")
 
 
-def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutable, bottomName='data',
-                       topName='convolution', outputPreffix="", verbose=False):
+def comparePooling(net, deploy, forward, backward, convbaseExecutable, bottomName='data',
+                   topName='pooling', outputPreffix="", verbose=False):
 
     if verbose:
         stdOut = sys.stdout
@@ -146,7 +131,7 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
             dataInputFile.write("{}\n".format(value))
         dataInputFile.close()
 
-    if backward or weights:
+    if backward:
         try:
             os.remove(outputPreffix + "gradients_input.txt")
         except OSError:
@@ -173,37 +158,16 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
                                                   net.blobs[bottomName].data.shape[2],
                                                   net.blobs[bottomName].data.shape[3],
                                                   net.blobs[bottomName].data.shape[1]))
-    paramsFile.write("\nConvolution\n")
+    paramsFile.write("\nPooling\n")
     paramsFile.write("1 bottom 1 top\n")
-    try:
-        biases = net.params[deploy.layer[1].name][1].data
-        biasTerm = 1
-    except:
-        biases = None
-        biasTerm = 0
     params = deploy.layer[1]
-    paramsFile.write("{} {} {} {} {}\n".format(params.convolution_param.num_output,
-                                               params.convolution_param.kernel_size[0],
-                                               params.convolution_param.stride[0],
-                                               params.convolution_param.pad[0],
-                                               biasTerm))
-    nhwcWeights = np.swapaxes(np.swapaxes(net.params[deploy.layer[1].name][0].data, 1, 2), 2, 3).reshape(-1)
-    paramsFile.write("{}".format(net.params[deploy.layer[1].name][0].data.shape[1]))
-    for weight in nhwcWeights:
-        paramsFile.write(" {}".format(weight))
-    paramsFile.write("\n")
-    if biases is not None:
-        paramsFile.write("{}".format(biases.size))
-        for bias in biases:
-            paramsFile.write(" {}".format(bias))
-    else:
-        paramsFile.write("0")
-
+    paramsFile.write("{} {}\n".format(params.pooling_param.kernel_size,
+                                      params.pooling_param.stride))
     paramsFile.close()
 
     net.forward()
     net.backward()
-    if forward and not weights:
+    if forward:
         convbaseArgs = [convbaseExecutable,
                         outputPreffix + "params.txt",
                         outputPreffix + "data_input.txt",
@@ -212,7 +176,7 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
         convbaseForward = subprocess.Popen(convbaseArgs, stdout=stdOut)
         convbaseForward.wait()
 
-    if backward and not weights:
+    if backward:
         convbaseArgs = [convbaseExecutable,
                         outputPreffix + "params.txt",
                         outputPreffix + "gradients_input.txt",
@@ -221,20 +185,8 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
         convbaseBackward = subprocess.Popen(convbaseArgs, stdout=stdOut)
         convbaseBackward.wait()
 
-    if weights:
-        convbaseArgs = [convbaseExecutable,
-                        outputPreffix + "params.txt",
-                        outputPreffix,
-                        outputPreffix,
-                        "weights"]
-        convbaseWeights = subprocess.Popen(convbaseArgs, stdout=stdOut)
-        convbaseWeights.wait()
-
-
     forwardError = 0
     backwardError = 0
-    weightsGradientsError = 0
-    biasesGradientsError = 0
 
     sys.stdout.write("\n")
 
@@ -270,39 +222,7 @@ def compareConvolution(net, deploy, forward, backward, weights, convbaseExecutab
         sys.stdout.write("Backward ")
         backwardError = printError(verbose, error, code)
 
-    if weights:
-        try:
-            os.remove(outputPreffix + "weights_caffe_output.txt")
-        except OSError:
-            pass
-        outputFile = open(outputPreffix + "weights_caffe_output.txt", "w")
-        nhwcOutput = np.swapaxes(np.swapaxes(net.params[topName][0].diff, 1, 2), 2, 3).reshape(-1)
-        for value in nhwcOutput:
-            outputFile.write("{}\n".format(value))
-        outputFile.close()
-
-        error, code = compareOutputs(outputPreffix + "weights_caffe_output.txt",
-                                     outputPreffix + "weights_convbase_output.txt")
-        sys.stdout.write("Weights gradients ")
-        weightsGradientsError = printError(verbose, error, code)
-
-        if biases is not None:
-            try:
-                os.remove(outputPreffix + "biases_caffe_output.txt")
-            except OSError:
-                pass
-            outputFile = open(outputPreffix + "biases_caffe_output.txt", "w")
-            for value in net.params[topName][1].diff:
-                outputFile.write("{}\n".format(value))
-            outputFile.close()
-
-            error, code = compareOutputs(outputPreffix + "biases_caffe_output.txt",
-                                         outputPreffix + "biases_convbase_output.txt")
-            sys.stdout.write("Biases gradients ")
-            biasesGradientsError = printError(verbose, error, code)
-
-
-    return np.asarray((forwardError, backwardError, weightsGradientsError, biasesGradientsError))
+    return np.asarray((forwardError, backwardError))
 
 
 def printError(verbose, error, code):
@@ -350,7 +270,7 @@ def compareOutputs(caffeOutputFile, convbaseOutputFile):
     return np.abs(caffeOutput - convbaseOutput).mean()/np.abs(caffeOutput).mean(), 'OK'
 
 
-def createConvolutionNet(params, bias):
+def createPoolingNet(params):
     import caffe
     if params is not None:
         params = params.split()
@@ -359,44 +279,34 @@ def createConvolutionNet(params, bias):
         height = int(inputParams[1])
         width = int(inputParams[2])
         channels = int(inputParams[3])
-        convParams = params[5].split(",")
-        kernelNumber = int(convParams[0])
-        kernelSize = int(convParams[1])
-        stride = int(convParams[2])
-        pad = int(convParams[3])
+        poolingParams = params[5].split(",")
+        kernelSize = int(poolingParams[0])
+        stride = int(poolingParams[1])
     else:
-        kernelNumber = random.randint(1, 32)
         kernelSize = random.randint(1, 5)
         stride = random.randint(1, 10)
-        pad = random.randint(0, kernelSize - 1)
-
-        num = random.randint(1, 16)
+        num = random.randint(1, 32)
         channels = random.randint(1, 32)
         height = random.randint(1, 32)
         width = random.randint(1, 32)
 
-        """
-        kernelNumber = 1
-        kernelSize = 2
-        stride = 1
-        pad = 1
-
-        num = 2
-        channels = 1
-        height = 2
-        width = 2
-        """
-
         # Adjust input to exactly fit conv params
-        height = adjustDimension(height, kernelSize, stride, pad)
-        width = adjustDimension(width, kernelSize, stride, pad)
+        height = adjustDimension(height, kernelSize, stride, 0)
+        width = adjustDimension(width, kernelSize, stride, 0)
+
+    """
+    height = 4
+    width = 4
+    channels = 10
+    kernelSize = 2
+    stride = 1
+    """
 
     net = caffe.NetSpec()
     net.data = caffe.layers.Input(shape=dict(dim=[num, channels, height, width]))
-    net.convolution = caffe.layers.Convolution(net.data, bias_term=bias,
-                                               num_output=kernelNumber,
-                                               kernel_size=kernelSize,
-                                               stride=stride, pad=pad)
+    net.pooling = caffe.layers.Pooling(net.data, kernel_size=kernelSize, stride=stride, pad=0)
+
+    return str(net.to_proto())
 
     return "force_backward: true\n" + str(net.to_proto())
 

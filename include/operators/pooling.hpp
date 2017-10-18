@@ -2,6 +2,7 @@
 #define POOLING_HPP
 
 #include "operator.hpp"
+#include <cstring>
 
 class Pooling : public Operator
 {
