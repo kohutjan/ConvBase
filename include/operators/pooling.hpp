@@ -19,6 +19,7 @@ class Pooling : public Operator
   private:
     const int kernelSize;
     const int stride;
+    std::vector<int> maxPoolingMap;
 };
 
 #endif

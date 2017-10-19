@@ -20,6 +20,13 @@ int main(int argc, char **argv)
   {
     storeTensor4D(testBackward(argv[2], net), argv[3], true);
   }
+  if (argv[4] == string("bf"))
+  {
+    storeTensor4D(testForward(argv[2] + string("data_input.txt"), net),
+                  argv[3] + string("forward_convbase_output.txt"), false);
+    storeTensor4D(testBackward(argv[2] + string("gradients_input.txt"), net),
+                  argv[3] + string("backward_convbase_output.txt"), true);
+  }
   if (argv[4] == string("weights"))
   {
     storeTensor4D(testForward(argv[2] + string("data_input.txt"), net),

@@ -32,7 +32,7 @@ Tensor4D loadTensor4D(string tensorFile, bool gradients)
   }
   else
   {
-    cerr << "Unable to open with tensor data." << endl;
+    cerr << "Unable to open file(" << tensorFile << ") with tensor data." << endl;
   }
   return tensor;
 }
@@ -60,6 +60,6 @@ void storeTensor4D(Tensor4D tensor, string tensorFile, bool gradients)
   }
   else
   {
-    cerr << "Unable to open file for storing tensor." << endl;
+    cerr << "Unable to open file(" << tensorFile << ") for storing tensor." << endl;
   }
 }

@@ -77,13 +77,14 @@ def main():
         tmpNetProto.close()
         sys.stdout.write("{}. ".format(i + 1))
         if not args.verbose:
-            sys.stdout.write("Input shape: {},{},{} ".format(net.blobs['data'].data.shape[2],
-                                                             net.blobs['data'].data.shape[3],
-                                                             net.blobs['data'].data.shape[1]))
+            sys.stdout.write("Input shape: {}, {},{},{} ".format(net.blobs['data'].data.shape[0],
+                                                                 net.blobs['data'].data.shape[2],
+                                                                 net.blobs['data'].data.shape[3],
+                                                                 net.blobs['data'].data.shape[1]))
             poolingParams = deploy.layer[1].pooling_param
             sys.stdout.write("Pooling params: {},{} ".format(poolingParams.kernel_size,
                                                              poolingParams.stride))
-            sys.stdout.write("Output shape: {},{},{} | ".format(net.blobs['pooling'].data.shape[2],
+            sys.stdout.write("Output shape: {},{},{}".format(net.blobs['pooling'].data.shape[2],
                                                                 net.blobs['pooling'].data.shape[3],
                                                                 net.blobs['pooling'].data.shape[1]))
 
@@ -116,7 +117,7 @@ def comparePooling(net, deploy, forward, backward, convbaseExecutable, bottomNam
         stdOut = open(os.devnull, 'w')
 
     # Prepare input for C++ implementation
-    if forward or weights:
+    if forward:
         try:
             os.remove(outputPreffix + "data_input.txt")
         except OSError:
@@ -167,6 +168,7 @@ def comparePooling(net, deploy, forward, backward, convbaseExecutable, bottomNam
 
     net.forward()
     net.backward()
+
     if forward:
         convbaseArgs = [convbaseExecutable,
                         outputPreffix + "params.txt",
@@ -179,9 +181,9 @@ def comparePooling(net, deploy, forward, backward, convbaseExecutable, bottomNam
     if backward:
         convbaseArgs = [convbaseExecutable,
                         outputPreffix + "params.txt",
-                        outputPreffix + "gradients_input.txt",
-                        outputPreffix + "backward_convbase_output.txt",
-                        "backward"]
+                        outputPreffix,
+                        outputPreffix,
+                        "bf"]
         convbaseBackward = subprocess.Popen(convbaseArgs, stdout=stdOut)
         convbaseBackward.wait()
 
@@ -295,18 +297,17 @@ def createPoolingNet(params):
         width = adjustDimension(width, kernelSize, stride, 0)
 
     """
+    num = 2
     height = 4
     width = 4
-    channels = 10
+    channels = 1
     kernelSize = 2
-    stride = 1
+    stride = 2
     """
 
     net = caffe.NetSpec()
     net.data = caffe.layers.Input(shape=dict(dim=[num, channels, height, width]))
     net.pooling = caffe.layers.Pooling(net.data, kernel_size=kernelSize, stride=stride, pad=0)
-
-    return str(net.to_proto())
 
     return "force_backward: true\n" + str(net.to_proto())
 
