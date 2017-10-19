@@ -4,12 +4,19 @@ using namespace std;
 
 void CIFAR10Loader::Load()
 {
+  cout << "Loading CIFAR10..." << endl;
+  cout << "#############################################################" << endl;
   this->LoadTrain();
+  cout << endl;
   this->LoadTest();
+  cout << "#############################################################" << endl;
+  cout << endl;
+  cout << endl;
 }
 
 void CIFAR10Loader::LoadTrain()
 {
+  cout << "Loading training datset..." << endl;
   for (int b = 0; b < 5; ++b)
   {
     vector<uint8_t> batch = this->LoadBatch(this->datasetFolder + "/data_batch_"
@@ -25,6 +32,7 @@ void CIFAR10Loader::LoadTrain()
 
 void CIFAR10Loader::LoadTest()
 {
+  cout << "Loading testing dataset..." << endl;
   vector<uint8_t> batch = this->LoadBatch(this->datasetFolder + "/test_batch.bin");
   for (int n = 0; n < 10000; ++n)
   {

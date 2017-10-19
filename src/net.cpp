@@ -149,8 +149,6 @@ shared_ptr<Operator> Net::LoadSoftmaxCrossEntropy(ifstream &modelStream)
 
 bool Net::Load(string modelName)
 {
-  cout << endl;
-  cout << endl;
   cout << "Model name: " << modelName << endl;
   ifstream modelStream(modelName);
   if (modelStream.is_open())
@@ -208,6 +206,7 @@ bool Net::LoadFromStream(ifstream &modelStream)
   }
   modelStream.close();
   cout << "#############################################################" << endl;
+  cout << endl;
   cout << endl;
   return true;
 }
@@ -471,5 +470,6 @@ void Net::PrintShapes()
     cout << endl;
   }
   cout << "#############################################################" << endl;
+  cout << endl;
   cout << endl;
 }
