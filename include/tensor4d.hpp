@@ -64,18 +64,21 @@ class Tensor4D
               n * shape[Hd] * shape[Wd] * shape[Cd] +
               h * shape[Wd] * shape[Cd] + w * shape[Cd]);
     }
-    int GetActualIndex(n, h, w, c)
+    int GetActualIndex(int n, int h, int w, int c)
     {
-
+      return (n * shape[Hd] * shape[Wd] * shape[Cd] +
+              h * shape[Wd] * shape[Cd] +
+              w * shape[Cd] + c);
     }
-    int GetActualIndex(n, h, w, c, pad)
+    int GetActualIndex(int n, int h, int w, int c, int pad)
     {
-      return ((n) * (shape[Hd] + 2 * pad) *
-                    (shape[Wd] + 2 * pad) *
-                     shape[Cd] +
-              (h + hK) * ((this->bottomShape[0][Wd] + 2 * this->pad) *
-                                       this->bottomShape[0][Cd]) +
-                          (w + wK) * (this->bottomShape[0][Cd]) + c
+      int imagePadOffset = (pad * (shape[Wd] + 2 * pad + shape[Hd]) * 2) * shape[Cd];
+      int widthPadOffset = (pad * (shape[Wd] + 2 * pad)) * shape[Cd];
+      int heightPadOffset = ((h - pad) * 2 * pad + pad) * shape[Cd];
+      int padOffset = n * imagePadOffset + widthPadOffset + heightPadOffset;
+      return ((n * (shape[Hd] + 2 * pad) * (shape[Wd] + 2 * pad) * shape[Cd] +
+               h * ((shape[Wd] + 2 * pad) * shape[Cd]) +
+               w * shape[Cd] + c) - padOffset);
     }
     float * GetData()
     {

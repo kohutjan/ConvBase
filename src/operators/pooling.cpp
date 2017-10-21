@@ -1,5 +1,4 @@
 #include "operators/pooling.hpp"
-#include <iostream>
 
 using namespace std;
 
@@ -20,12 +19,7 @@ void Pooling::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
                this->bottomShape[0][Cd] * sizeof(float));
         for (size_t c = 0; c < tmpMaxKernelIndexes.size(); ++c)
         {
-          tmpMaxKernelIndexes[c] = n * this->bottomShape[0][Hd] *
-                                       this->bottomShape[0][Wd] *
-                                       this->bottomShape[0][Cd] +
-                                   h * this->bottomShape[0][Wd] *
-                                       this->bottomShape[0][Cd] +
-                                   w * this->bottomShape[0][Cd] + c;
+          tmpMaxKernelIndexes[c] = bottom[0].GetActualIndex(n, h, w, c);
         }
         for (int hK = 0; hK < this->kernelSize; ++hK)
         {
@@ -37,12 +31,7 @@ void Pooling::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
               if (pixelVal[c] > tmpMaxKernelVals[c])
               {
                 tmpMaxKernelVals[c] = pixelVal[c];
-                tmpMaxKernelIndexes[c] = n * this->bottomShape[0][Hd] *
-                                             this->bottomShape[0][Wd] *
-                                             this->bottomShape[0][Cd] +
-                                         (h + hK) * this->bottomShape[0][Wd] *
-                                                   this->bottomShape[0][Cd] +
-                                         (w + wK) * this->bottomShape[0][Cd] + c;
+                tmpMaxKernelIndexes[c] = bottom[0].GetActualIndex(n, h + hK, w + wK, c);
               }
             }
           }

@@ -66,6 +66,7 @@ void Im2Col::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 void Im2Col::ComputeCol2ImMap()
 {
   this->col2imMap.clear();
+  Tensor4D bottom(this->bottomShape[0]);
   for (int n = 0; n < this->bottomShape[0][Nd]; ++n)
   {
     for (int h = 0; h <= this->bottomShape[0][Hd] + 2 * this->pad - this->kernelSize; h += this->stride)
@@ -87,20 +88,10 @@ void Im2Col::ComputeCol2ImMap()
               }
             }
             else
-            { //TODO make it more readable
-              int padOffset = (n * (this->pad * (this->bottomShape[0][Wd] + 2 *
-                                    this->pad + this->bottomShape[0][Hd]) * 2) +
-                               this->pad * (this->bottomShape[0][Wd] + 2 * this->pad)
-                               + ((h + hK - this->pad) * 2 * this->pad + this->pad))
-                               * this->bottomShape[0][Cd];
+            {
               for (int c = 0; c < this->bottomShape[0][Cd]; ++c)
               {
-                this->col2imMap.push_back((n) * ((this->bottomShape[0][Hd] + 2 * this->pad) *
-                                           (this->bottomShape[0][Wd] + 2 * this->pad) *
-                                            this->bottomShape[0][Cd]) +
-                                    (h + hK) * ((this->bottomShape[0][Wd] + 2 * this->pad) *
-                                                 this->bottomShape[0][Cd]) +
-                                    (w + wK) * (this->bottomShape[0][Cd]) + c - padOffset);
+                this->col2imMap.push_back(bottom.GetActualIndex(n, h + hK, w + wK, c, this->pad));
               }
             }
           }
@@ -116,7 +107,7 @@ void Im2Col::ComputeTopShape()
   this->topShape[0][Nd] = 1;
   this->topShape[0][Hd] = ((this->bottomShape[0][Hd] + 2 * this->pad -
                            this->kernelSize) / this->stride + 1) *
-                         ((this->bottomShape[0][Wd] + 2 * this->pad -
+                          ((this->bottomShape[0][Wd] + 2 * this->pad -
                            this->kernelSize) / this->stride + 1) *
                            this->bottomShape[0][Nd];
   this->topShape[0][Wd] = this->kernelSize * this->kernelSize * this->bottomShape[0][Cd];
