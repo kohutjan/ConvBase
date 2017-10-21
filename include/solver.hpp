@@ -7,11 +7,21 @@
 class Solver
 {
   public:
+    Solver(Loader * _loader, Net _net) : loader(_loader), net(_net)
+    {
+      setOutputNames();
+    }
     Solver(Loader * _loader, Net _net, float _learningRate, int _trainIterations,
            int _testInterval, int _testIterations, int _displayInterval) :
            loader(_loader), net(_net), learningRate(_learningRate),
            trainIterations(_trainIterations), testInterval(_testInterval),
            testIterations(_testIterations), displayInterval(_displayInterval)
+    {
+      setOutputNames();
+    }
+    bool Load(std::string modelName);
+    bool LoadFromStream(std::ifstream &modelStream);
+    void setOutputNames()
     {
       for (auto& op: this->net.operators)
       {
@@ -33,11 +43,11 @@ class Solver
   private:
     Loader * loader;
     Net net;
-    const float learningRate;
-    const int trainIterations;
-    const int testInterval;
-    const int testIterations;
-    const int displayInterval;
+    float learningRate;
+    int trainIterations;
+    int testInterval;
+    int testIterations;
+    int displayInterval;
     std::string outputBottomName;
     std::string outputTopName;
 };

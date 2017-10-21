@@ -80,10 +80,9 @@ int main(int argc, char **argv)
     net.InitWeights();
   }
 
-  /*
   Solver solver(&loader, net);
+  solver.Load(solverFileName);
   solver.Solve();
-  */
 
   if (!saveFileName.empty())
   {

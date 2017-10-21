@@ -2,79 +2,108 @@
 
 using namespace std;
 
+bool Solver::Load(string solverFileName)
+{
+  cout << "Solver file name: " << solverFileName << endl;
+  ifstream solverStream(solverFileName);
+  if (solverStream.is_open())
+  {
+    return this->LoadFromStream(solverStream);
+  }
+  else
+  {
+    cerr << "Unable to open solver file." << endl;
+    return false;
+  }
+}
+
+bool Solver::LoadFromStream(ifstream &solverStream)
+{
+  cout << "Solver params:" << endl;
+  cout << "#############################################################" << endl;
+  while (!solverStream.eof())
+  {
+    string paramName;
+    solverStream >> paramName;
+    if (paramName == "learning_rate")
+    {
+      solverStream >> this->learningRate;
+      cout << paramName << ": " << this->learningRate << endl;
+      continue;
+    }
+    if (paramName == "train_iterations")
+    {
+      solverStream >> this->trainIterations;
+      cout << paramName << ": " << this->trainIterations << endl;
+      continue;
+    }
+    if (paramName == "test_interval")
+    {
+      solverStream >> this->testInterval;
+      cout << paramName << ": " << this->testInterval << endl;
+      continue;
+    }
+    if (paramName == "test_iterations")
+    {
+      solverStream >> this->testIterations;
+      cout << paramName << ": " << this->testIterations << endl;
+      continue;
+    }
+    if (paramName == "display_interval")
+    {
+      solverStream >> this->displayInterval;
+      cout << paramName << ": " << this->displayInterval << endl;
+      continue;
+    }
+  }
+  solverStream.close();
+  cout << "#############################################################" << endl;
+  cout << endl;
+  cout << endl;
+  return true;
+}
+
 void Solver::Solve()
 {
   int rightGuesses = 0;
   for (int n = 0; n < this->trainIterations; ++n)
   {
+    this->TestNet(n + 1);
     pair<Tensor4D, Tensor4D> batch = this->GetRandomTrainBatch();
     this->net.AddTensor4DToContainer(this->outputTopName, batch.first);
     this->net.AddTensor4DToContainer(this->net.inputs.begin()->first, batch.second);
     this->net.Forward();
     rightGuesses += this->GetRightGuesses(batch, this->net.GetTensor4DFromContainer(this->outputBottomName));
-    this->PrintAccuracy("Train", n, this->displayInterval, &rightGuesses);
+    this->PrintAccuracy("Train", n + 1, this->displayInterval, &rightGuesses);
     this->net.Backward();
-    /*
-    Tensor4D top = this->net.GetTensor4DFromContainer("conv4");
-    Tensor4D bottom = this->net.GetTensor4DFromContainer("relu3");
-    float * topVal = top.GetData();
-    float * bottomVal = bottom.GetGradients();
-    cout << "########## DATA ##########" << endl;
-    int topImageSize = top.GetSize() / top.GetShape()[Nd];
-    for (int m = 0; m < top.GetShape()[Nd]; ++m)
-    {
-      for (int i = 0; i < topImageSize; ++i)
-      {
-        if (i != 0 && i % top.GetShape()[Cd] == 0)
-        {
-            cout << endl;
-            break;
-        }
-        cout << topVal[m * topImageSize + i] << " ";
-      }
-    }
-
-    cout << endl;
-    cout << endl;
-    cout << "########## GRADIENTS ##########" << endl;
-    int bottomImageSize = bottom.GetSize() / bottom.GetShape()[Nd];
-    for (int m = 0; m < bottom.GetShape()[Nd]; ++m)
-    {
-      for (int i = 0; i < bottomImageSize; ++i)
-      {
-        if (i != 0 && i % bottom.GetShape()[Cd] == 0)
-        {
-            cout << endl;
-            break;
-        }
-        cout << bottomVal[m * bottomImageSize + i] << " ";
-      }
-    }
-    cout << endl << endl << endl;
-    */
     this->net.UpdateWeights(this->learningRate);
-    this->TestNet(n);
   }
   cout << endl;
   cout << "#############################################################" << endl;
-  this->PrintAccuracy("Train", this->trainIterations, this->displayInterval, &rightGuesses);
+  this->PrintAccuracy("Train", this->trainIterations, this->trainIterations, &rightGuesses);
   cout << "#############################################################" << endl;
   cout << endl;
 }
 
 void Solver::TestNet(int n)
 {
-  if (n != 0)
+  if (this->testInterval != 0)
   {
-    if (n % (this->testInterval - 1) == 0)
+    if (n % this->testInterval == 0)
     {
       int rightGuesses = 0;
+      if (this->testIterations == -1)
+      {
+        this->testIterations = static_cast<int>(this->loader->testDataset.first.size()) /
+                                                this->net.inputs.begin()->second[Nd];
+      }
       for (int i = 0; i < this->testIterations; ++i)
       {
         vector<int> indexes(this->net.inputs.begin()->second[Nd]);
         for (int j = 0; j < static_cast<int>(indexes.size()); ++j)
         {
-          indexes[j] = (i * indexes.size() + j) % this->loader->testDataset.first.size();
+          indexes[j] = (i * static_cast<int>(indexes.size()) + j) %
+                        static_cast<int>(this->loader->testDataset.first.size());
         }
         pair<Tensor4D, Tensor4D> batch = this->GetBatch("test", indexes);
         this->net.AddTensor4DToContainer(this->outputTopName, batch.first);
@@ -93,9 +122,9 @@ void Solver::TestNet(int n)
 
 void Solver::PrintAccuracy(string type, int n, int interval, int * rightGuesses)
 {
-  if (n != 0)
+  if (interval != 0)
   {
-    if (n % (interval - 1) == 0)
+    if (n % interval == 0)
     {
       cout << n << " iterations | ";
       cout << type << " accuracy: " << float(*rightGuesses)
@@ -115,7 +144,7 @@ int Solver::GetRightGuesses(pair<Tensor4D, Tensor4D> batch, Tensor4D top)
     int topLabel = 0;
     for (int i = 1; i < top.GetShape()[Cd]; ++i)
     {
-      if (labelVal[top.GetShape()[Cd] * j + i] > maxLabelVal)
+      if (labelVal[j * top.GetShape()[Cd] + i] > maxLabelVal)
       {
         maxLabelVal = labelVal[top.GetShape()[Cd] * j + i];
         topLabel = i;

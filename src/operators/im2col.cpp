@@ -8,7 +8,7 @@ void Im2Col::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
   float * topDataVal = top[0].GetData();
   int topOffset = 0;
-  
+
   for (int n = 0; n < this->bottomShape[0][Nd]; ++n)
   {
     for (int h = 0; h <= this->bottomShape[0][Hd] + 2 * this->pad - this->kernelSize; h += this->stride)
@@ -51,9 +51,7 @@ void Im2Col::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 void Im2Col::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
   float * bottomGradientsVal = bottom[0].GetGradients();
-  fill(bottomGradientsVal, bottomGradientsVal + (this->bottomShape[0][Nd] *
-       this->bottomShape[0][Hd] * this->bottomShape[0][Wd] *
-       this->bottomShape[0][Cd]), 0.0);
+  fill(bottomGradientsVal, bottomGradientsVal + bottom[0].GetSize(), 0.0);
   float * topGradientsVal = top[0].GetGradients();
   for (size_t i = 0; i < this->col2imMap.size(); ++i)
   {

@@ -64,6 +64,19 @@ class Tensor4D
               n * shape[Hd] * shape[Wd] * shape[Cd] +
               h * shape[Wd] * shape[Cd] + w * shape[Cd]);
     }
+    int GetActualIndex(n, h, w, c)
+    {
+
+    }
+    int GetActualIndex(n, h, w, c, pad)
+    {
+      return ((n) * (shape[Hd] + 2 * pad) *
+                    (shape[Wd] + 2 * pad) *
+                     shape[Cd] +
+              (h + hK) * ((this->bottomShape[0][Wd] + 2 * this->pad) *
+                                       this->bottomShape[0][Cd]) +
+                          (w + wK) * (this->bottomShape[0][Cd]) + c
+    }
     float * GetData()
     {
       return data.get();
