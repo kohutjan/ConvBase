@@ -79,6 +79,7 @@ int main(int argc, char **argv)
   {
     net.InitWeights();
   }
+  net.InitMomentums();
 
   Solver solver(&loader, net);
   solver.Load(solverFileName);

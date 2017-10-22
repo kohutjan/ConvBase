@@ -6,26 +6,14 @@ using namespace Eigen;
 void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
   this->im2col.Forward(bottom, vector<Tensor4D>(1, this->col));
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             RowMajor>>
-             eigenColData(this->col.GetData(), this->col.GetShape()[Hd],
-                          this->col.GetShape()[Wd]);
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             ColMajor>>
-             eigenKernelsData(this->kernels.GetData(), this->kernelSize *
-                          this->kernelSize * this->kernels.GetShape()[Cd],
-                          this->numberOfKernels);
+  RowMajorMap eigenColData(this->col.GetData(), this->col.GetShape()[Hd],
+                           this->col.GetShape()[Wd]);
+  ColMajorMap eigenKernelsData(this->kernels.GetData(), this->kernelSize *
+                               this->kernelSize * this->kernels.GetShape()[Cd],
+                               this->numberOfKernels);
 
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             RowMajor>>
-             eigenTopData(top[0].GetData(), eigenColData.rows(),
-                          eigenKernelsData.cols());
+  RowMajorMap eigenTopData(top[0].GetData(), eigenColData.rows(),
+                           eigenKernelsData.cols());
 
   eigenTopData = eigenColData * eigenKernelsData;
 
@@ -38,47 +26,26 @@ void Convolution::Forward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 
 void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
 {
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             RowMajor>>
-             eigenTopGradients(top[0].GetGradients(), this->topShape[0][Nd] *
-                               this->topShape[0][Hd] * this->topShape[0][Wd],
-                               this->topShape[0][Cd]);
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             RowMajor>>
-             eigenTransposeKernelsData(this->kernels.GetData(),
-                                       this->numberOfKernels, this->kernelSize *
-                                       this->kernelSize * this->kernels.GetShape()[Cd]);
-  setNbThreads(0);
+  RowMajorMap eigenTopGradients(top[0].GetGradients(), this->topShape[0][Nd] *
+                                this->topShape[0][Hd] * this->topShape[0][Wd],
+                                this->topShape[0][Cd]);
+  RowMajorMap eigenTransposeKernelsData(this->kernels.GetData(),
+                                        this->numberOfKernels, this->kernelSize *
+                                        this->kernelSize * this->kernels.GetShape()[Cd]);
 
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             RowMajor>>
-             eigenColGradients(this->col.GetGradients(), this->col.GetShape()[Hd],
-                               this->col.GetShape()[Wd]);
+  RowMajorMap eigenColGradients(this->col.GetGradients(), this->col.GetShape()[Hd],
+                                this->col.GetShape()[Wd]);
 
   eigenColGradients = eigenTopGradients * eigenTransposeKernelsData;
 
   this->im2col.Backward(bottom, vector<Tensor4D>(1, this->col));
 
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             ColMajor>>
-             eigenTransposeColData(this->col.GetData(), this->col.GetShape()[Wd],
-                                   this->col.GetShape()[Hd]);
+  ColMajorMap eigenTransposeColData(this->col.GetData(), this->col.GetShape()[Wd],
+                                    this->col.GetShape()[Hd]);
 
-  Map<Matrix<float,
-             Dynamic,
-             Dynamic,
-             ColMajor>>
-             eigenKernelsGradients(this->kernels.GetGradients(), this->kernelSize *
-                                   this->kernelSize * this->kernels.GetShape()[Cd],
-                                   this->numberOfKernels);
+  ColMajorMap eigenKernelsGradients(this->kernels.GetGradients(), this->kernelSize *
+                                    this->kernelSize * this->kernels.GetShape()[Cd],
+                                    this->numberOfKernels);
 
   eigenKernelsGradients = eigenTransposeColData * eigenTopGradients;
 
@@ -89,21 +56,25 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
   }
 }
 
-void Convolution::UpdateWeights(float learningRate)
+void Convolution::UpdateWeights(float learningRate, float momentum)
 {
   float * kernelsDataVal = this->kernels.GetData();
   float * kernelsGradientsVal = this->kernels.GetGradients();
+  float * kernelsMomentumVal = this->kernelsMomentum.GetData();
   for (int i = 0; i < this->kernels.GetSize(); ++i)
   {
-    kernelsDataVal[i] -= kernelsGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate;
+    kernelsMomentumVal[i] = momentum * kernelsMomentumVal[i] - (kernelsGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate);
+    kernelsDataVal[i] += kernelsMomentumVal[i];
   }
   if (this->bias)
   {
     float * biasesDataVal = this->biases.GetData();
     float * biasesGradientsVal = this->biases.GetGradients();
+    float * biasesMomentumVal = this->biasesMomentum.GetData();
     for (int i = 0; i < this->biases.GetSize(); ++i)
     {
-      biasesDataVal[i] -= biasesGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate;
+      biasesMomentumVal[i] = momentum * biasesMomentumVal[i] - (biasesGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate);
+      biasesDataVal[i] += biasesMomentumVal[i];
     }
   }
 }
@@ -127,6 +98,19 @@ void Convolution::InitWeights()
     this->biases = Tensor4D(1, 1, 1, this->numberOfKernels);
     float * biasesVal = this->biases.GetData();
     fill(biasesVal, biasesVal + this->biases.GetSize(), 0.0);
+  }
+}
+
+void Convolution::InitMomentums()
+{
+  this->kernelsMomentum = Tensor4D(this->kernels.GetShape());
+  fill(this->kernelsMomentum.GetData(), this->kernelsMomentum.GetData() +
+       this->kernelsMomentum.GetSize(), 0.0);
+  if (this->bias)
+  {
+    this->biasesMomentum = Tensor4D(this->biases.GetShape());
+    fill(this->biasesMomentum.GetData(), this->biasesMomentum.GetData() +
+         this->biasesMomentum.GetSize(), 0.0);
   }
 }
 

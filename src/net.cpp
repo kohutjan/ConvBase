@@ -358,6 +358,14 @@ void Net::InitWeights()
   }
 }
 
+void Net::InitMomentums()
+{
+  for (auto& op: this->operators)
+  {
+    op->InitMomentums();
+  }
+}
+
 void Net::Forward()
 {
   for (auto& op: this->operators)
@@ -410,11 +418,11 @@ void Net::Backward()
   }
 }
 
-void Net::UpdateWeights(float learningRate)
+void Net::UpdateWeights(float learningRate, float momentum)
 {
   for (auto& op: this->operators)
   {
-    op->UpdateWeights(learningRate);
+    op->UpdateWeights(learningRate, momentum);
   }
 }
 

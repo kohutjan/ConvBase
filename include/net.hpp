@@ -19,10 +19,11 @@ class Net
     bool SaveToStream(std::ofstream &modelStream);
     void Init();
     void InitWeights();
+    void InitMomentums();
     void PrintShapes();
     void Forward();
     void Backward();
-    void UpdateWeights(float learningRate);
+    void UpdateWeights(float learningRate, float momentum);
     std::map<std::string, Tensor4D> GetTensor4DContainer() const { return tensor4DContainer; }
     void AddTensor4DToContainer(std::string name, Tensor4D tensor)
     {

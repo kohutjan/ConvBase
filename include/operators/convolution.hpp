@@ -7,6 +7,9 @@
 #include <random>
 #include <math.h>
 
+typedef Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> RowMajorMap;
+typedef Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>> ColMajorMap;
+
 class Convolution : public Operator
 {
   public:
@@ -19,8 +22,9 @@ class Convolution : public Operator
     void Forward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
     void Backward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
     void ComputeTopShape();
-    void UpdateWeights(float learningRate);
+    void UpdateWeights(float learningRate, float momentum);
     void InitWeights();
+    void InitMomentums();
     int GetNumberOfKernels() const { return numberOfKernels; }
     int GetKernelSize() const { return kernelSize; }
     int GetStride() const { return stride; }
@@ -37,7 +41,9 @@ class Convolution : public Operator
     const int pad;
     const int bias;
     Tensor4D kernels;
+    Tensor4D kernelsMomentum;
     Tensor4D biases;
+    Tensor4D biasesMomentum;
     Im2Col im2col;
     Tensor4D col;
 };

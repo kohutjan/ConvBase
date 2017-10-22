@@ -31,6 +31,11 @@ bool Solver::LoadFromStream(ifstream &solverStream)
       cout << paramName << ": " << this->learningRate << endl;
       continue;
     }
+    if (paramName == "momentum")
+    {
+      solverStream >> this->momentum;
+      cout << paramName << ": " << this->momentum << endl;
+    }
     if (paramName == "train_iterations")
     {
       solverStream >> this->trainIterations;
@@ -68,7 +73,7 @@ void Solver::Solve()
   int rightGuesses = 0;
   for (int n = 0; n < this->trainIterations; ++n)
   {
-    this->TestNet(n + 1);
+    this->TestNet(n);
     pair<Tensor4D, Tensor4D> batch = this->GetRandomTrainBatch();
     this->net.AddTensor4DToContainer(this->outputTopName, batch.first);
     this->net.AddTensor4DToContainer(this->net.inputs.begin()->first, batch.second);
@@ -76,7 +81,7 @@ void Solver::Solve()
     rightGuesses += this->GetRightGuesses(batch, this->net.GetTensor4DFromContainer(this->outputBottomName));
     this->PrintAccuracy("Train", n + 1, this->displayInterval, &rightGuesses);
     this->net.Backward();
-    this->net.UpdateWeights(this->learningRate);
+    this->net.UpdateWeights(this->learningRate, this->momentum);
   }
   cout << endl;
   cout << "#############################################################" << endl;
