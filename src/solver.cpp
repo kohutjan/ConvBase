@@ -36,6 +36,11 @@ bool Solver::LoadFromStream(ifstream &solverStream)
       solverStream >> this->momentum;
       cout << paramName << ": " << this->momentum << endl;
     }
+    if (paramName == "weight_decay")
+    {
+      solverStream >> this->weightDecay;
+      cout << paramName << ": " << this->weightDecay << endl;
+    }
     if (paramName == "train_iterations")
     {
       solverStream >> this->trainIterations;
@@ -81,7 +86,7 @@ void Solver::Solve()
     rightGuesses += this->GetRightGuesses(batch, this->net.GetTensor4DFromContainer(this->outputBottomName));
     this->PrintAccuracy("Train", n + 1, this->displayInterval, &rightGuesses);
     this->net.Backward();
-    this->net.UpdateWeights(this->learningRate, this->momentum);
+    this->net.UpdateWeights(this->learningRate, this->momentum, this->weightDecay);
   }
   cout << endl;
   cout << "#############################################################" << endl;

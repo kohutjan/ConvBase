@@ -56,14 +56,16 @@ void Convolution::Backward(vector<Tensor4D> bottom, vector<Tensor4D> top)
   }
 }
 
-void Convolution::UpdateWeights(float learningRate, float momentum)
+void Convolution::UpdateWeights(float learningRate, float momentum, float weightDecay)
 {
   float * kernelsDataVal = this->kernels.GetData();
   float * kernelsGradientsVal = this->kernels.GetGradients();
   float * kernelsMomentumVal = this->kernelsMomentum.GetData();
   for (int i = 0; i < this->kernels.GetSize(); ++i)
   {
-    kernelsMomentumVal[i] = momentum * kernelsMomentumVal[i] - (kernelsGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate);
+    kernelsMomentumVal[i] = momentum * kernelsMomentumVal[i] -
+                            (kernelsGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate) -
+                            weightDecay * learningRate * kernelsDataVal[i];
     kernelsDataVal[i] += kernelsMomentumVal[i];
   }
   if (this->bias)
@@ -73,7 +75,9 @@ void Convolution::UpdateWeights(float learningRate, float momentum)
     float * biasesMomentumVal = this->biasesMomentum.GetData();
     for (int i = 0; i < this->biases.GetSize(); ++i)
     {
-      biasesMomentumVal[i] = momentum * biasesMomentumVal[i] - (biasesGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate);
+      biasesMomentumVal[i] = momentum * biasesMomentumVal[i] -
+                             (biasesGradientsVal[i] * (1.0 / this->topShape[0][Nd]) * learningRate) -
+                             weightDecay * learningRate * biasesDataVal[i];
       biasesDataVal[i] += biasesMomentumVal[i];
     }
   }

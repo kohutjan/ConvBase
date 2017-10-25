@@ -12,11 +12,12 @@ class Solver
       setOutputNames();
     }
     Solver(Loader * _loader, Net _net, float _learningRate, float _momentum,
-           int _trainIterations, int _testInterval, int _testIterations,
-           int _displayInterval) : loader(_loader), net(_net),
+           float _weightDecay, int _trainIterations, int _testInterval,
+           int _testIterations, int _displayInterval) : loader(_loader), net(_net),
            learningRate(_learningRate), momentum(_momentum),
-           trainIterations(_trainIterations), testInterval(_testInterval),
-           testIterations(_testIterations), displayInterval(_displayInterval)
+           weightDecay(_weightDecay), trainIterations(_trainIterations),
+           testInterval(_testInterval), testIterations(_testIterations),
+           displayInterval(_displayInterval)
     {
       setOutputNames();
     }
@@ -46,6 +47,7 @@ class Solver
     Net net;
     float learningRate;
     float momentum;
+    float weightDecay;
     int trainIterations;
     int testInterval;
     int testIterations;

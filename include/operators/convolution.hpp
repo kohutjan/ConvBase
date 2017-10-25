@@ -22,7 +22,7 @@ class Convolution : public Operator
     void Forward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
     void Backward(std::vector<Tensor4D> bottoms, std::vector<Tensor4D> tops);
     void ComputeTopShape();
-    void UpdateWeights(float learningRate, float momentum);
+    void UpdateWeights(float learningRate, float momentum, float weightDecay);
     void InitWeights();
     void InitMomentums();
     int GetNumberOfKernels() const { return numberOfKernels; }

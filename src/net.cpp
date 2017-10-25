@@ -418,11 +418,11 @@ void Net::Backward()
   }
 }
 
-void Net::UpdateWeights(float learningRate, float momentum)
+void Net::UpdateWeights(float learningRate, float momentum, float weightDecay)
 {
   for (auto& op: this->operators)
   {
-    op->UpdateWeights(learningRate, momentum);
+    op->UpdateWeights(learningRate, momentum, weightDecay);
   }
 }
 

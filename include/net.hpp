@@ -23,7 +23,7 @@ class Net
     void PrintShapes();
     void Forward();
     void Backward();
-    void UpdateWeights(float learningRate, float momentum);
+    void UpdateWeights(float learningRate, float momentum, float weightDecay);
     std::map<std::string, Tensor4D> GetTensor4DContainer() const { return tensor4DContainer; }
     void AddTensor4DToContainer(std::string name, Tensor4D tensor)
     {
