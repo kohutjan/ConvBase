@@ -291,6 +291,12 @@ bool Net::SaveToStream(ofstream &modelStream)
       }
       modelStream << endl;
     }
+    if (op->GetType().compare(string("Pooling")) == 0)
+    {
+      Pooling * tmpPool = dynamic_cast<Pooling*>(op.get());
+      modelStream << tmpPool->GetKernelSize() << " ";
+      modelStream << tmpPool->GetStride() << endl;
+    }
     if (op->GetType().compare(string("Reshape")) == 0)
     {
       Reshape * tmpReshape = dynamic_cast<Reshape*>(op.get());
