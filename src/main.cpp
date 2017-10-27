@@ -12,21 +12,19 @@ int main(int argc, char **argv)
   {"solver", required_argument, 0, 's'},
   {"dataset", required_argument, 0, 'd'},
   {"init-weights", no_argument, 0, 'i'},
-  {"save", required_argument, 0, 'a'},
   {0, 0, 0, 0}};
 
   string netFileName;
   string solverFileName;
   string datasetFileName;
   int initWeights = 0;
-  string saveFileName;
 
   cout << endl;
   cout << "Params" << endl;
   cout << "#############################################################" << endl;
   int option_index = 0;
   int opt = 0;
-  while ((opt = getopt_long(argc, argv, "n:s:d:ia:", long_options, &option_index)) != -1)
+  while ((opt = getopt_long(argc, argv, "n:s:d:i", long_options, &option_index)) != -1)
   {
     switch (opt)
     {
@@ -48,11 +46,6 @@ int main(int argc, char **argv)
       case 'i':
         initWeights = 1;
         cout << "Init weights set." << endl;
-        break;
-
-      case 'a':
-        saveFileName = optarg;
-        cout << "Save: " << optarg << endl;
         break;
 
       default:
@@ -84,11 +77,6 @@ int main(int argc, char **argv)
   Solver solver(&loader, net);
   solver.Load(solverFileName);
   solver.Solve();
-
-  if (!saveFileName.empty())
-  {
-    net.Save(saveFileName);
-  }
 
   return 0;
 }

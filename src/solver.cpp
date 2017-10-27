@@ -65,6 +65,18 @@ bool Solver::LoadFromStream(ifstream &solverStream)
       cout << paramName << ": " << this->displayInterval << endl;
       continue;
     }
+    if (paramName == "save_interval")
+    {
+      solverStream >> this->saveInterval;
+      cout << paramName << ": " << this->saveInterval << endl;
+      continue;
+    }
+    if (paramName == "save_prefix")
+    {
+      solverStream >> this->savePrefix;
+      cout << paramName << ": " << this->savePrefix << endl;
+      continue;
+    }
   }
   solverStream.close();
   cout << "#############################################################" << endl;
@@ -79,6 +91,7 @@ void Solver::Solve()
   for (int n = 0; n < this->trainIterations; ++n)
   {
     this->TestNet(n);
+    this->SaveNet(n);
     pair<Tensor4D, Tensor4D> batch = this->GetRandomTrainBatch();
     this->net.AddTensor4DToContainer(this->outputTopName, batch.first);
     this->net.AddTensor4DToContainer(this->net.inputs.begin()->first, batch.second);
@@ -88,10 +101,8 @@ void Solver::Solve()
     this->net.Backward();
     this->net.UpdateWeights(this->learningRate, this->momentum, this->weightDecay);
   }
-  cout << endl;
-  cout << "#############################################################" << endl;
-  this->PrintAccuracy("Train", this->trainIterations, this->trainIterations, &rightGuesses);
-  cout << "#############################################################" << endl;
+  this->TestNet(this->trainIterations);
+  this->SaveNet(this->trainIterations);
   cout << endl;
 }
 
@@ -126,6 +137,26 @@ void Solver::TestNet(int n)
       this->PrintAccuracy("Test", this->testIterations, this->testIterations, &rightGuesses);
       cout << "#############################################################" << endl;
       cout << endl;
+    }
+  }
+}
+
+void Solver::SaveNet(int n)
+{
+  if (this->saveInterval != 0)
+  {
+    if ((n % this->saveInterval == 0) && (n != 0))
+    {
+      string path;
+      if (this->savePrefix.empty())
+      {
+        path = to_string(n) + string("_iter.convbase");
+      }
+      else
+      {
+        path = this->savePrefix + string("_") + to_string(n) + string("_iter.convbase");
+      }
+      this->net.Save(path);
     }
   }
 }

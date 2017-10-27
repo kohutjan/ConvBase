@@ -218,7 +218,10 @@ bool Net::Save(string modelName)
   {
     if(this->SaveToStream(modelStream))
     {
+      cout << "#############################################################" << endl;
       cout << "Net was saved to " << modelName << endl;
+      cout << "#############################################################" << endl;
+      cout << endl;
       return true;
     }
     else
