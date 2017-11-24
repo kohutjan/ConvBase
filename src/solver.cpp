@@ -101,7 +101,14 @@ void Solver::Solve()
     this->net.Backward();
     this->net.UpdateWeights(this->learningRate, this->momentum, this->weightDecay);
   }
-  this->TestNet(this->trainIterations);
+  if (this->trainIterations == 0)
+  {
+    this->TestNet(this->testInterval);
+  }
+  else
+  {
+    this->TestNet(this->trainIterations);
+  }
   this->SaveNet(this->trainIterations);
   cout << endl;
 }
@@ -150,11 +157,11 @@ void Solver::SaveNet(int n)
       string path;
       if (this->savePrefix.empty())
       {
-        path = to_string(n) + string("_iter.convbase");
+        path = string("iter_") + to_string(n) + string(".convbase");
       }
       else
       {
-        path = this->savePrefix + string("_") + to_string(n) + string("_iter.convbase");
+        path = this->savePrefix + string("_iter_") + to_string(n) + string(".convbase");
       }
       this->net.Save(path);
     }

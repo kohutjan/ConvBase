@@ -33,5 +33,7 @@ add_executable(compute_net
                ${ConvBase_SRC_DIR}/operators/softmax_cross_entropy.cpp)
 
 
+add_executable(classify_image
+               ${ConvBase_SRC_DIR}/classify_image.cpp)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fopenmp -std=gnu++11 -Wall -Wextra -pedantic")

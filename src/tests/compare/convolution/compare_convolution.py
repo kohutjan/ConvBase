@@ -21,7 +21,7 @@ def parse_args():
                         help="Number of tests (default 1)")
     parser.add_argument('-e', '--convbase-executable',
                         required=True,
-                        help="compute_convolution exacutable")
+                        help="compute_net exacutable")
     parser.add_argument('-s', '--bias',
                         action='store_true',
                         help='Use bias.')
