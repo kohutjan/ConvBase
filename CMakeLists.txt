@@ -35,10 +35,9 @@ add_executable(compute_net
                ${ConvBase_SRC_DIR}/operators/softmax_cross_entropy.cpp)
 
 
-add_executable(classify_image
-               ${ConvBase_SRC_DIR}/classify_image.cpp
+add_executable(classify_images
+               ${ConvBase_SRC_DIR}/classify_images.cpp
                ${ConvBase_SRC_DIR}/net.cpp
-               ${ConvBase_SRC_DIR}/loaders/cifar10_loader.cpp
                ${ConvBase_SRC_DIR}/operators/convolution.cpp
                ${ConvBase_SRC_DIR}/operators/pooling.cpp
                ${ConvBase_SRC_DIR}/operators/relu.cpp
@@ -46,7 +45,7 @@ add_executable(classify_image
                ${ConvBase_SRC_DIR}/operators/im2col.cpp
                ${ConvBase_SRC_DIR}/operators/softmax_cross_entropy.cpp)
 
-target_link_libraries( classify_image ${OpenCV_LIBS} )
+target_link_libraries(classify_images ${OpenCV_LIBS})
 
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fopenmp -std=gnu++11 -Wall -Wextra -pedantic")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fopenmp -std=gnu++17 -Wall -Wextra -pedantic")
