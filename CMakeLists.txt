@@ -38,6 +38,7 @@ add_executable(compute_net
 add_executable(classify_image
                ${ConvBase_SRC_DIR}/classify_image.cpp
                ${ConvBase_SRC_DIR}/net.cpp
+               ${ConvBase_SRC_DIR}/loaders/cifar10_loader.cpp
                ${ConvBase_SRC_DIR}/operators/convolution.cpp
                ${ConvBase_SRC_DIR}/operators/pooling.cpp
                ${ConvBase_SRC_DIR}/operators/relu.cpp

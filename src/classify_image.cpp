@@ -5,6 +5,7 @@
 #include <iomanip>
 #include "net.hpp"
 #include <math.h>
+#include "loaders/cifar10_loader.hpp"
 
 using namespace cv;
 using namespace std;
@@ -32,7 +33,7 @@ Tensor4D ConvertImageToTensor4D(Mat image, float mean, float scale)
   int nChannels = image.channels();
   int nRows = image.rows;
   int nCols = image.cols;
-  Tensor4D tensor = Tensor4D(1, nChannels, nRows, nCols);
+  Tensor4D tensor = Tensor4D(1, nRows, nCols, nChannels);
   float * data = tensor.GetData();
   for(int i = 0; i < nRows; ++i)
   {
@@ -103,7 +104,7 @@ int main( int argc, char** argv )
     Net net;
     net.Load("../nets/2xC32_P2_2xC32_P2_2xC32_P2_FC256_FC10_iter_3000.convbase");
     net.Init();
-    net.AddTensor4DToContainer(net.inputs.begin()->first, ConvertImageToTensor4D(image, 127.0, 0.007840157));
+    net.AddTensor4DToContainer(net.inputs.begin()->first, ConvertImageToTensor4D(image, 127.0, 0.007874016));
     net.Forward();
     string topName = net.operators.back()->GetBottomName()[0];
     Tensor4D output = net.GetTensor4DFromContainer(topName);
