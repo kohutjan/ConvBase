@@ -337,16 +337,23 @@ void Net::Init()
   for (size_t bottomIndex = numberOfInputsOperators; bottomIndex < this->operators.size(); ++bottomIndex)
   {
     vector<vector<int>> tmpBottomShape;
-    for (size_t topIndex = 0; topIndex < bottomIndex; ++topIndex)
+    for (auto& bottom: this->operators[bottomIndex]->GetBottomName())
     {
-      for (auto& bottom: this->operators[bottomIndex]->GetBottomName())
+      bool bottomFound = false;
+      for (size_t topIndex = bottomIndex - 1; topIndex >= 0; --topIndex)
       {
         for (size_t t = 0; t < this->operators[topIndex]->GetTopName().size(); ++t)
         {
           if (bottom.compare(this->operators[topIndex]->GetTopName()[t]) == 0)
           {
+            bottomFound = true;
             tmpBottomShape.push_back(this->operators[topIndex]->GetTopShape()[t]);
+            break;
           }
+        }
+        if (bottomFound)
+        {
+          break;
         }
       }
     }
