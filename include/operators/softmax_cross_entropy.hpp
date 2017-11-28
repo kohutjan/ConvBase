@@ -12,6 +12,7 @@ class SoftmaxCrossEntropy : public Operator
     void Forward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
     void Backward(std::vector<Tensor4D> bottom, std::vector<Tensor4D> top);
     void ComputeTopShape();
+    Tensor4D GetSoftmaxTop() const { return softmaxTop; }
     ~SoftmaxCrossEntropy(){}
 
   private:

@@ -79,16 +79,16 @@ vector<float> SoftMax(Tensor4D tensor)
 
 void PrintScore(Tensor4D tensor)
 {
-  vector<float> tensorSoftMax = SoftMax(tensor);
+  float * data = tensor.GetData();
   cout << setprecision(2);
   int maxIndex = 0;
-  float maxVal = tensorSoftMax[0];
-  for (size_t i = 1; i < tensorSoftMax.size(); ++i)
+  float maxVal = data[0];
+  for (size_t i = 1; i < tensor.GetSize(); ++i)
   {
-    if (tensorSoftMax[i] > maxVal)
+    if (data[i] > maxVal)
     {
       maxIndex = i;
-      maxVal = tensorSoftMax[i];
+      maxVal = data[i];
     }
   }
 
@@ -129,9 +129,9 @@ void PrintScore(Tensor4D tensor)
       break;
   }
   cout << endl;
-  for (size_t i = 0; i < tensorSoftMax.size(); ++i)
+  for (size_t i = 0; i < tensor.GetSize(); ++i)
   {
-    cout << tensorSoftMax[i] << " ";
+    cout << data[i] << " ";
   }
   cout << endl;
 }
@@ -140,8 +140,8 @@ void ClassifyImage(Net &net, Mat image)
 {
   net.AddTensor4DToContainer(net.inputs.begin()->first, ConvertImageToTensor4D(image, 127.0, 0.007874016));
   net.Forward();
-  string topName = net.operators.back()->GetBottomName()[0];
-  Tensor4D output = net.GetTensor4DFromContainer(topName);
+  SoftmaxCrossEntropy * softmax = dynamic_cast<SoftmaxCrossEntropy*>(net.operators.back().get());
+  Tensor4D output = softmax->GetSoftmaxTop();
   PrintScore(output);
 }
 
