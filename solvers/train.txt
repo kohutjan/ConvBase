@@ -1,0 +1,9 @@
+learning_rate 0.001
+momentum 0.9
+weight_decay 0.0005
+train_iterations 300
+test_interval 100
+test_iterations 50
+display_interval 5
+save_interval 100
+save_prefix ../nets/C32_P2_C32_P2_C32_P2_FC128_FC10

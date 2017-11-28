@@ -10,7 +10,7 @@ set(ConvBase_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 include_directories(${ConvBase_INCLUDE_DIR})
 include_directories(${ConvBase_SRC_DIR})
 
-add_executable(ConvBase
+add_executable(conv_base
                ${ConvBase_SRC_DIR}/main.cpp
                ${ConvBase_SRC_DIR}/solver.cpp
                ${ConvBase_SRC_DIR}/loaders/cifar10_loader.cpp

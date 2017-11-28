@@ -1,0 +1,66 @@
+Input
+1
+input 16 32 32 3
+
+Convolution
+1 input 1 conv0
+32 3 1 1 1
+0
+0
+
+ReLU
+1 conv0 1 conv0
+
+Pooling
+1 conv0 1 pool0
+2 2
+
+Convolution 
+1 pool0 1 conv1
+32 3 1 1 1
+0
+0
+
+ReLU
+1 conv1 1 conv1
+
+Pooling
+1 conv1 1 pool1
+2 2
+
+Convolution
+1 pool1 1 conv2
+32 3 1 1 1
+0
+0
+
+ReLU
+1 conv2 1 conv2
+
+Pooling 
+1 conv2 1 pool2
+2 2
+
+Reshape
+1 pool2 1 reshape
+1 1 512
+
+Convolution
+1 reshape 1 conv3
+128 1 1 0 1
+0
+0
+
+ReLU
+1 conv3 1 conv3
+
+Convolution
+1 conv3 1 top
+10 1 1 0 1
+0
+0
+
+SoftmaxCrossEntropy
+1 top 1 loss
+
+

@@ -127,6 +127,12 @@ int main( int argc, char** argv )
 {
     Net net;
     net.Load(argv[1]);
+    vector<int> inputShape = net.inputs.begin()->second;
+    if (inputShape[0] != 1)
+    {
+      inputShape[0] = 1;
+      net.inputs.begin()->second = inputShape;
+    }
     net.Init();
 
     cout << "File with paths to classify: " << argv[2] << endl;
