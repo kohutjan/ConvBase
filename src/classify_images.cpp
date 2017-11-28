@@ -4,7 +4,6 @@
 #include <iostream>
 #include <iomanip>
 #include "net.hpp"
-#include <math.h>
 
 using namespace cv;
 using namespace std;
@@ -54,27 +53,6 @@ Tensor4D ConvertImageToTensor4D(Mat image, float mean, float scale)
     }
   }
   return tensor;
-}
-
-vector<float> SoftMax(Tensor4D tensor)
-{
-  float * data = tensor.GetData();
-  vector<float> tensorExp(tensor.GetSize());
-  for (size_t i = 0; i < tensorExp.size(); ++i)
-  {
-    tensorExp[i] = exp(data[i]);
-  }
-  float sumExp = 0.0;
-  for (auto& val: tensorExp)
-  {
-    sumExp += val;
-  }
-  vector<float> tensorSoftMax(tensor.GetSize());
-  for (size_t i = 0; i < tensorSoftMax.size(); ++i)
-  {
-    tensorSoftMax[i] = tensorExp[i] / sumExp;
-  }
-  return tensorSoftMax;
 }
 
 void PrintScore(Tensor4D tensor)
